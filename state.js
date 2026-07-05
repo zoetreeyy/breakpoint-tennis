@@ -61,7 +61,7 @@ export function getInitialState() {
   };
 }
 
-import { db, ref, onValue, set } from './firebase-config.js';
+import { db, ref, onValue, set } from './firebase-config.js?v=1';
 
 let currentState = null;
 
