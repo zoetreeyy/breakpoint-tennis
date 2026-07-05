@@ -61,39 +61,89 @@ export function getInitialState() {
   };
 }
 
-// Load state from localStorage with robust fallback and schema verification
-export function loadState() {
+import { db, ref, onValue, set } from './firebase-config.js';
+
+let currentState = null;
+
+// Initialize state asynchronously (Firebase listener or LocalStorage fallback)
+export function initSystemState(onStateChangeCallback) {
   const defaults = getInitialState();
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      loadMockDataIntoState(defaults);
-      saveState(defaults);
-      return defaults;
+  
+  // If Firebase is not configured properly (e.g. still has placeholders)
+  if (!db) {
+    console.warn("⚠️ Firebase is not configured! Falling back to LocalStorage.");
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (!data) {
+        loadMockDataIntoState(defaults);
+        saveState(defaults); // Saves to local
+        currentState = defaults;
+      } else {
+        const parsed = JSON.parse(data);
+        currentState = {
+          courts: Array.isArray(parsed.courts) ? parsed.courts : defaults.courts,
+          players: Array.isArray(parsed.players) ? parsed.players : defaults.players,
+          events: Array.isArray(parsed.events) ? parsed.events : defaults.events,
+          matches: Array.isArray(parsed.matches) ? parsed.matches : defaults.matches,
+          configs: { ...defaults.configs, ...parsed.configs }
+        };
+      }
+    } catch (e) {
+      console.error("Local load failed", e);
+      currentState = defaults;
     }
-    const parsed = JSON.parse(data);
-    return {
-      courts: Array.isArray(parsed.courts) ? parsed.courts : defaults.courts,
-      players: Array.isArray(parsed.players) ? parsed.players : defaults.players,
-      events: Array.isArray(parsed.events) ? parsed.events : defaults.events,
-      matches: Array.isArray(parsed.matches) ? parsed.matches : defaults.matches,
-      configs: { ...defaults.configs, ...parsed.configs }
-    };
-  } catch (e) {
-    console.error("Failed to load state from localStorage, returning defaults", e);
-    return defaults;
+    
+    // Simulate initial load and listen for local cross-tab changes
+    onStateChangeCallback(currentState);
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        currentState = JSON.parse(e.newValue);
+        onStateChangeCallback(currentState);
+      }
+    });
+    window.addEventListener('tournament-state-updated', (e) => {
+      currentState = e.detail;
+      onStateChangeCallback(currentState);
+    });
+    return;
   }
+
+  // Firebase is configured - Set up real-time listener
+  const stateRef = ref(db, 'tournamentState');
+  onValue(stateRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      currentState = {
+        courts: Array.isArray(data.courts) ? data.courts : defaults.courts,
+        players: Array.isArray(data.players) ? data.players : defaults.players,
+        events: Array.isArray(data.events) ? data.events : defaults.events,
+        matches: Array.isArray(data.matches) ? data.matches : defaults.matches,
+        configs: { ...defaults.configs, ...(data.configs || {}) }
+      };
+    } else {
+      // Initialize Firebase with defaults if completely empty
+      loadMockDataIntoState(defaults);
+      currentState = defaults;
+      saveState(currentState); 
+    }
+    onStateChangeCallback(currentState);
+  });
 }
 
-// Save state to localStorage safely
+// Save state to Firebase safely (or fallback to LocalStorage)
 export function saveState(state) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error("Failed to save state to localStorage", e);
+  currentState = state;
+  if (!db) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.dispatchEvent(new CustomEvent('tournament-state-updated', { detail: state }));
+    } catch (e) {}
+    return;
   }
-  // Dispatch local event for same-tab triggers (storage event only fires cross-tab)
-  window.dispatchEvent(new CustomEvent('tournament-state-updated', { detail: state }));
+
+  // Save to Firebase
+  const stateRef = ref(db, 'tournamentState');
+  set(stateRef, state).catch(e => console.error("Firebase save failed:", e));
 }
 
 // Auto-scheduler algorithm

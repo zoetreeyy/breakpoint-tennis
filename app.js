@@ -1,7 +1,7 @@
 // app.js - Controller and Routing Coordinator
 
 import { 
-  loadState, 
+  initSystemState, 
   saveState, 
   getInitialState, 
   autoScheduleMatches, 
@@ -31,34 +31,45 @@ let activeView = 'player-view';
 
 // Keep track of called match IDs to avoid repeating speech/visual summons alerts
 let previouslyCalledMatchIds = new Set();
+let isAppInitialized = false;
 
 // Initialize the App
 function init() {
-  state = loadState();
-  
-  // Cache initially called matches so we don't announce them upon page load
-  state.matches.forEach(m => {
-    if (m.status === 'called') {
-      previouslyCalledMatchIds.add(m.id);
+  initSystemState((newState) => {
+    state = newState;
+    
+    // First time initialization
+    if (!isAppInitialized) {
+      isAppInitialized = true;
+      
+      // Cache initially called matches so we don't announce them upon page load
+      state.matches.forEach(m => {
+        if (m.status === 'called') {
+          previouslyCalledMatchIds.add(m.id);
+        }
+      });
+
+      setupEventListeners();
+      
+      // Periodic update loop (every 1 second) for timers
+      setInterval(tickTimers, 1000);
+      
+      // Autoselect first event for bracket select if present
+      const select = document.getElementById('player-bracket-event-select');
+      if (state.events.length > 0 && select.options.length === 0) {
+        state.events.forEach(ev => {
+          const opt = document.createElement('option');
+          opt.value = ev;
+          opt.text = ev;
+          select.add(opt);
+        });
+      }
     }
+
+    // Every time state updates from cloud (or local)
+    checkForNewSummons(state);
+    renderAll();
   });
-
-  setupEventListeners();
-  renderAll();
-
-  // Periodic update loop (every 1 second) for timers
-  setInterval(tickTimers, 1000);
-  
-  // Autoselect first event for bracket select if present
-  const select = document.getElementById('player-bracket-event-select');
-  if (state.events.length > 0 && select.options.length === 0) {
-    state.events.forEach(ev => {
-      const opt = document.createElement('option');
-      opt.value = ev;
-      opt.text = ev;
-      select.add(opt);
-    });
-  }
 }
 
 // Global renderer
