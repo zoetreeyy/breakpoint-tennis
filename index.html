@@ -9,18 +9,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
   <!-- Navigation Bar -->
   <header class="app-header">
-    <div class="logo">
-      <span class="emoji">🎾</span>
-      <div class="brand">
-        <h1>Breakpoint</h1>
-        <span class="subbrand">賽事管理系統</span>
+    <div class="header-top">
+      <div class="logo">
+        <span class="emoji">🎾</span>
+        <div class="brand">
+          <h1>Breakpoint</h1>
+          <span class="subbrand">賽事管理系統</span>
+        </div>
       </div>
+      <button id="mobile-menu-btn" class="mobile-menu-btn">☰ 選單</button>
     </div>
     
     <!-- View Switcher -->
@@ -511,27 +514,87 @@
     </div>
   </div>
 
-  <!-- Modal 3: Certificate Print/Export Preview -->
-  <div id="certificate-modal" class="modal-overlay hidden">
-    <div class="modal-card modal-lg">
+  <!-- Modal 1: Court Assignment / Scoring -->
+  <div id="court-modal" class="modal-overlay hidden">
+    <div class="modal-card">
       <div class="modal-header">
-        <h3>🏆 賽事優勝證書列印</h3>
+        <h3 id="modal-court-title">球場調度管理</h3>
+        <button class="modal-close" onclick="document.getElementById('court-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- View A: Empty Court - Select Match -->
+        <div id="modal-view-assign" class="hidden">
+          <label>請選擇要安排在此球場的賽事：</label>
+          <select id="modal-match-select" class="form-control mt-2 mb-3">
+            <!-- Populate from queue -->
+          </select>
+          <div class="flex gap-2">
+            <button class="btn btn-primary w-full" id="btn-modal-assign-call">安排並廣播點名 (Call)</button>
+            <button class="btn btn-outline w-full" id="btn-modal-assign-start">直接開始比賽</button>
+          </div>
+        </div>
+
+        <!-- View B: Called Court - Start or Abort -->
+        <div id="modal-view-called" class="hidden text-center">
+          <p class="mb-3 text-warning">選手目前正在點名中...</p>
+          <div class="flex gap-2">
+            <button class="btn btn-success w-full" id="btn-modal-called-start">確認選手到齊，開始比賽</button>
+            <button class="btn btn-danger w-full" id="btn-modal-called-cancel">取消廣播 (退回佇列)</button>
+          </div>
+        </div>
+
+        <!-- View C: Active Match - Score & Complete -->
+        <div id="modal-view-active" class="hidden text-center">
+          <p class="mb-2 text-accent">目前進行賽事：<span id="modal-active-match-name"></span></p>
+          <div class="flex gap-2 justify-center align-center mb-4">
+            <div class="player-score-box">
+              <div id="modal-active-p1-name" class="font-bold mb-2">Player 1</div>
+              <input type="number" id="modal-score-p1" class="form-control text-center" value="0" min="0" max="99">
+            </div>
+            <div class="font-bold" style="font-size: 1.5rem;">VS</div>
+            <div class="player-score-box">
+              <div id="modal-active-p2-name" class="font-bold mb-2">Player 2</div>
+              <input type="number" id="modal-score-p2" class="form-control text-center" value="0" min="0" max="99">
+            </div>
+          </div>
+          <div class="flex flex-column gap-2">
+            <button class="btn btn-accent w-full btn-glow" id="btn-modal-active-finish">結束比賽並紀錄比分</button>
+            <button class="btn btn-danger w-full mt-2" id="btn-modal-active-cancel">中斷賽事 (退回佇列)</button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal 2: Initial Audio Context Banner -->
+  <div id="audio-init-banner" class="modal-overlay hidden" style="z-index: 9999;">
+    <div class="modal-card text-center" style="max-width: 400px;">
+      <h3 class="mb-3">🔊 系統廣播授權</h3>
+      <p class="text-secondary mb-4">裁判與工作人員專用：請點擊下方按鈕以允許瀏覽器在此分頁播放大會的召集語音廣播與音效。</p>
+      <div class="flex flex-column gap-2">
+        <button class="btn btn-accent btn-glow" id="btn-init-audio">授權音訊播放並進入系統</button>
+        <button class="btn btn-outline" onclick="document.getElementById('audio-init-banner').classList.add('hidden')">稍後再設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Certificate Print Generator -->
+  <div id="certificate-modal" class="modal-overlay hidden">
+    <div class="modal-card" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h3>🏅 大會獎狀列印系統</h3>
         <button class="modal-close" onclick="document.getElementById('certificate-modal').classList.add('hidden')">&times;</button>
       </div>
       <div class="modal-body cert-modal-body">
-        <div class="cert-controls">
+        <div class="cert-controls mb-4">
           <div class="form-group">
             <label for="cert-title">大會標題</label>
             <input type="text" id="cert-title" class="form-control" value="2026 Breakpoint 夏季網球公開賽">
           </div>
           <div class="form-group">
             <label for="cert-winner-label">名次文字</label>
-            <input type="text" id="cert-rank" class="form-control" value="冠軍 (Winner)">
-          </div>
-          <div class="form-group">
-            <label for="cert-style">證書樣式</label>
-            <select id="cert-style" class="form-control">
-              <option value="classic">經典璀璨金 (Classic Gold)</option>
               <option value="modern">現代活力綠 (Modern Tennis Green)</option>
               <option value="minimal">簡約象牙白 (Minimalist Clean)</option>
             </select>
@@ -561,7 +624,6 @@
           <div class="form-group">
             <label for="auth-password" id="auth-label">認證密碼：</label>
             <input type="password" id="auth-password" class="form-control" required placeholder="請輸入密碼">
-            <small class="form-text text-secondary mt-1" id="auth-hint">*(預設測試密碼)*</small>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="document.getElementById('auth-modal').classList.add('hidden')">取消</button>
@@ -603,6 +665,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=4"></script>
+  <script type="module" src="app.js?v=5"></script>
 </body>
 </html>

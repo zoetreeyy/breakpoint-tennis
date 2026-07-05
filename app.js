@@ -176,7 +176,6 @@ function setupEventListeners() {
           document.getElementById('auth-target-view').value = viewId;
           document.getElementById('auth-password').value = '';
           document.getElementById('auth-label').innerText = '裁判控制台執法認證密碼：';
-          document.getElementById('auth-hint').innerHTML = '*(提示：執法裁判密碼為 <strong class="text-accent">ref123</strong>)*';
           document.getElementById('auth-modal').classList.remove('hidden');
           return; // Intercept view switch
         }
@@ -185,7 +184,6 @@ function setupEventListeners() {
           document.getElementById('auth-target-view').value = viewId;
           document.getElementById('auth-password').value = '';
           document.getElementById('auth-label').innerText = '工作人員管理認證密碼：';
-          document.getElementById('auth-hint').innerHTML = '*(提示：大會工作人員密碼為 <strong class="text-accent">staff123</strong>)*';
           document.getElementById('auth-modal').classList.remove('hidden');
           return; // Intercept view switch
         }
@@ -203,8 +201,19 @@ function setupEventListeners() {
       }
       activeView = viewId;
       renderAll();
+      
+      // Auto-close mobile menu when a tab is clicked
+      document.querySelector('.view-selector').classList.remove('show-on-mobile');
     });
   });
+  
+  // Mobile Menu Toggle logic
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+      document.querySelector('.view-selector').classList.toggle('show-on-mobile');
+    });
+  }
 
   // Password Verification form submit
   document.getElementById('auth-form').addEventListener('submit', (e) => {
