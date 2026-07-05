@@ -113,11 +113,24 @@ export function initSystemState(onStateChangeCallback) {
   onValue(stateRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
+      // Firebase might drop empty arrays (making them undefined) 
+      // or convert sparse arrays to objects (e.g. { "0": obj, "2": obj }).
+      // We must robustly convert them back to Arrays.
+      
+      const parsedPlayers = (Array.isArray(data.players) ? data.players : Object.values(data.players || [])).map(p => ({
+        ...p,
+        events: p.events || [] // Firebase removes empty arrays, ensure it's always an array
+      }));
+
+      const parsedMatches = Array.isArray(data.matches) ? data.matches : Object.values(data.matches || []);
+      const parsedCourts = Array.isArray(data.courts) ? data.courts : Object.values(data.courts || []);
+      const parsedEvents = Array.isArray(data.events) ? data.events : Object.values(data.events || []);
+
       currentState = {
-        courts: Array.isArray(data.courts) ? data.courts : defaults.courts,
-        players: Array.isArray(data.players) ? data.players : defaults.players,
-        events: Array.isArray(data.events) ? data.events : defaults.events,
-        matches: Array.isArray(data.matches) ? data.matches : defaults.matches,
+        courts: parsedCourts.length > 0 ? parsedCourts : defaults.courts,
+        players: parsedPlayers,
+        events: parsedEvents.length > 0 ? parsedEvents : defaults.events,
+        matches: parsedMatches,
         configs: { ...defaults.configs, ...(data.configs || {}) }
       };
     } else {
