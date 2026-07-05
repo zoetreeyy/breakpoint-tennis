@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breakpoint 網球賽事整合管理系統 | Breakpoint Tennis Tournament Hub</title>
+  <!-- Google Fonts: Outfit & Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="app-header">
+    <div class="logo">
+      <span class="emoji">🎾</span>
+      <div class="brand">
+        <h1>Breakpoint</h1>
+        <span class="subbrand">賽事管理系統</span>
+      </div>
+    </div>
+    
+    <!-- View Switcher -->
+    <nav class="view-selector">
+      <button class="nav-btn active" data-view="player-view">
+        <span class="icon">👥</span> 選手看板 (Player Hub)
+      </button>
+      <button class="nav-btn" data-view="staff-dashboard">
+        <span class="icon">💼</span> 工作人員端 (Staff Ops)
+      </button>
+      <button class="nav-btn" data-view="referee-panel">
+        <span class="icon">⚖️</span> 裁判控制台 (Umpire Console)
+      </button>
+      <button class="nav-btn" data-view="staff-setup">
+        <span class="icon">⚙️</span> 事前設定 (Setup)
+      </button>
+    </nav>
+
+    <!-- Multi-tab Sim Sync Indicator -->
+    <div class="sync-badge" id="sync-status">
+      <span class="dot"></span> 跨分頁即時同步中
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="app-content">
+
+    <!-- ==============================================
+         1. PLAYER VIEW (選手看板)
+         ============================================== -->
+    <section id="player-view" class="view-panel active">
+      <div class="player-hero">
+        <div class="hero-content">
+          <h2>即時賽事看板 & 選手查詢</h2>
+          <p>輸入您的姓名查詢報名賽事、參賽禮物狀態及預計賽程，或查看下方球場即時比分與出賽召集。</p>
+          
+          <!-- Player Info Lookup -->
+          <div class="search-box-container">
+            <input type="text" id="player-search-input" placeholder="請輸入您的姓名（例如：盧彥勳）...">
+            <button id="player-search-btn" class="btn btn-primary">查詢個人狀態</button>
+          </div>
+          
+          <!-- Search Result Card (Hidden by default) -->
+          <div id="player-search-result" class="search-result-card hidden">
+            <!-- Rendered by UI.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Court Status Grid -->
+      <div class="section-header">
+        <h3>🏟️ 各球場即時賽況 (Live Court Board)</h3>
+        <span class="live-pulse">● LIVE</span>
+      </div>
+      <div class="court-grid" id="player-court-grid">
+        <!-- Rendered dynamically by UI.js -->
+      </div>
+
+      <!-- Upcoming Schedule / Queue -->
+      <div class="layout-grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h4>📅 預計即將進行賽程 (Upcoming Queue)</h4>
+            <span class="badge badge-info" id="upcoming-matches-count">0 場待安排</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>賽事項目</th>
+                  <th>輪次</th>
+                  <th>對戰組合</th>
+                  <th>選手狀態</th>
+                  <th>預估時間</th>
+                </tr>
+              </thead>
+              <tbody id="player-upcoming-matches">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h4>🏆 賽事簽表與即時戰績 (Brackets)</h4>
+            <div class="select-wrapper">
+              <select id="player-bracket-event-select" class="form-control">
+                <!-- Event options filled dynamically -->
+              </select>
+            </div>
+          </div>
+          <div class="bracket-viewer-container" id="player-bracket-viewer">
+            <!-- Brackets drawn dynamically by UI.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         2. STAFF DASHBOARD (工作人員端)
+         ============================================== -->
+    <section id="staff-dashboard" class="view-panel">
+      <div class="dashboard-summary">
+        <div class="summary-card">
+          <span class="sc-icon">👥</span>
+          <div class="sc-info">
+            <span class="sc-label">報名總選手</span>
+            <span class="sc-value" id="stats-total-players">0</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="sc-icon">✅</span>
+          <div class="sc-info">
+            <span class="sc-label">完成報到</span>
+            <span class="sc-value" id="stats-checked-in">0 / 0</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="sc-icon">🏟️</span>
+          <div class="sc-info">
+            <span class="sc-label">球場使用中</span>
+            <span class="sc-value" id="stats-active-courts">0 / 0</span>
+          </div>
+        </div>
+        <div class="summary-card">
+          <span class="sc-icon">🎾</span>
+          <div class="sc-info">
+            <span class="sc-label">已賽完賽事</span>
+            <span class="sc-value" id="stats-completed-matches">0 / 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+      <div class="action-bar-container">
+        <button id="btn-auto-schedule" class="btn btn-accent btn-glow">
+          ⚡ 智慧自動排程 (Auto-Schedule)
+        </button>
+        <button id="btn-mock-summon" class="btn btn-outline" style="display: none;">
+          🔊 測試呼叫音效
+        </button>
+        <div class="action-bar-desc">
+          將自動檢查可用球場，安排符合「雙方已報到」且「無30分鐘內連續出賽衝突」的下一場賽程。
+        </div>
+      </div>
+
+      <div class="layout-grid-1-2">
+        <!-- Check-in & Gift Management -->
+        <div class="card">
+          <div class="card-header">
+            <h4>📋 選手報到與領獎確認 (Check-in & Gift Management)</h4>
+            <div class="search-bar">
+              <input type="text" id="staff-player-search" class="form-control" placeholder="搜尋選手姓名/電話...">
+            </div>
+          </div>
+          <div class="table-container" style="max-height: 480px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>參賽項目</th>
+                  <th>參賽禮選擇</th>
+                  <th>報到狀態</th>
+                  <th>領取狀態</th>
+                </tr>
+              </thead>
+              <tbody id="staff-checkin-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Right side: Active Courts and Match Queue -->
+        <div class="flex-column">
+          <!-- Active Courts Control -->
+          <div class="card">
+            <div class="card-header">
+              <h4>🏟️ 球場即時調度 (Court Deployment)</h4>
+            </div>
+            <div class="court-grid-mini" id="staff-court-grid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Pending Schedule & Assignment -->
+          <div class="card">
+            <div class="card-header">
+              <h4>🕒 待排賽程與手動指派 (Schedule Queue)</h4>
+            </div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>項目/輪次</th>
+                    <th>對戰選手</th>
+                    <th>選手報到與30分保護衝突檢查</th>
+                    <th>指派球場</th>
+                  </tr>
+                </thead>
+                <tbody id="staff-match-queue-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Winners and Certificates Section -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h4>🏆 優勝名單與獎狀列印 (Winners & Certificates)</h4>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>賽事項目</th>
+                <th>冠軍 (Winner)</th>
+                <th>亞軍 (Runner-up)</th>
+                <th>列印獎狀</th>
+              </tr>
+            </thead>
+            <tbody id="staff-winners-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         3. REFEREE PANEL (裁判控制台)
+         ============================================= -->
+    <section id="referee-panel" class="view-panel">
+      <div class="section-header">
+        <h3>⚖️ 裁判執法面板 (Umpire Console)</h3>
+        <p class="text-secondary">供球場裁判計時 10 分鐘遲到點名、變更比賽狀態、輸入比分或裁定棄賽。</p>
+      </div>
+
+      <div class="court-grid" id="referee-court-grid">
+        <!-- Rendered dynamically by UI.js -->
+        <!-- Contains details of who's on court, countdown timer, "Enter Score", "Default (棄賽)" -->
+      </div>
+    </section>
+
+    <!-- ==============================================
+         4. PRE-SETUP VIEW (事前設定)
+         ============================================== -->
+    <section id="staff-setup" class="view-panel">
+      <div class="layout-grid-2">
+        <!-- Left: Court & Config Settings -->
+        <div class="card">
+          <div class="card-header">
+            <h4>⚙️ 比賽基本參數設定</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="setup-court-count">🏟️ 比賽球場數</label>
+              <div class="input-action-row">
+                <input type="number" id="setup-court-count" class="form-control" min="1" max="10" value="4">
+                <button id="btn-update-courts" class="btn btn-primary">重設球場</button>
+              </div>
+              <small class="form-text">變更球場數將重新規劃場地。目前使用中的賽程可能受影響。</small>
+            </div>
+
+            <div class="form-group mt-4">
+              <label for="setup-rest-buffer">🕒 選手連續出賽休息時間 (分鐘)</label>
+              <input type="number" id="setup-rest-buffer" class="form-control" value="30">
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="setup-summon-limit">⏳ 召集出賽遲到判定時間 (分鐘)</label>
+              <input type="number" id="setup-summon-limit" class="form-control" value="10">
+            </div>
+
+            <div class="form-group mt-4 border-top pt-4">
+              <label>⚠️ 測試與演示控制</label>
+              <div class="button-group mt-2">
+                <button id="btn-load-mock" class="btn btn-outline-accent">
+                  🔄 載入 16 人大會演示資料 (含自動晉級與衝突範例)
+                </button>
+                <button id="btn-reset-all" class="btn btn-danger">
+                  🗑️ 刪除全部資料，重置為空白
+                </button>
+              </div>
+              <small class="form-text text-warning mt-2">提示：載入演示資料將自動產生 3 個組別的淘汰賽簽表，並預設好部分賽事結果，以便您立即測試所有功能。</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Player list import -->
+        <div class="card">
+          <div class="card-header">
+            <h4>👥 選手名單與組別匯入 (Player Registry)</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="setup-events-list">📝 參賽組別/賽事階層 (每行一個)</label>
+              <textarea id="setup-events-list" class="form-control" rows="3" placeholder="例如：&#10;男子單打 (Open)&#10;女子單打 (Open)&#10;男子單打 (B級)"></textarea>
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="setup-player-import">📥 快速匯入選手 CSV / 文字清單</label>
+              <textarea id="setup-player-import" class="form-control" rows="8" placeholder="格式：姓名, 電話, 參賽組別(以分號分隔), 參賽禮物&#10;例如：&#10;王小明,0912345678,男子單打 (Open);混合雙打,網球經典排汗衫 (L)&#10;李美玲,0987654321,女子單打 (Open),精美運動毛巾"></textarea>
+              <div class="form-check mt-2 mb-2">
+                <input class="form-check-input" type="checkbox" id="setup-random-shuffle" checked>
+                <label class="form-check-label" for="setup-random-shuffle">
+                  🎲 啟用隨機抽籤 (若取消勾選，系統將完全依照您的「匯入順序」作為對戰種子排序)
+                </label>
+              </div>
+              <div class="button-group mt-2">
+                <button id="btn-import-players" class="btn btn-secondary">📥 開始解析並匯入選手</button>
+                <button id="btn-generate-brackets" class="btn btn-outline-primary">🏆 一鍵重新生成各組別淘汰賽簽表</button>
+              </div>
+              <small class="form-text">匯入時，系統會自動在選手資料庫中累加。重新生成簽表會清除該組別現有的比分記錄。</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Match Scheduler Creator Card -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <h4>📅 自訂賽程手動新增與批次匯入 (Custom Match Scheduler)</h4>
+        </div>
+        <div class="card-body">
+          <div class="layout-grid-2" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+            <!-- Left: Manual Match Add Form -->
+            <div>
+              <h5>➕ 手動新增單場賽事 (Manual Match Creator)</h5>
+              <form id="setup-match-manual-form" class="mt-2">
+                <div class="form-group">
+                  <label for="setup-match-event">選擇賽事項目</label>
+                  <select id="setup-match-event" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="setup-match-round">輪次名稱</label>
+                  <input type="text" id="setup-match-round" class="form-control" placeholder="例如：第 1 輪、八強賽、決賽" required>
+                </div>
+                <div class="form-group">
+                  <label for="setup-match-p1">選手 A (Player 1)</label>
+                  <select id="setup-match-p1" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="setup-match-p2">選手 B (Player 2)</label>
+                  <select id="setup-match-p2" class="form-control" required></select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2 w-full">➕ 新增至待排賽程</button>
+              </form>
+            </div>
+
+            <!-- Right: CSV Batch Import -->
+            <div>
+              <h5>📥 批次匯入對戰賽程 (Batch Match Import)</h5>
+              <div class="form-group mt-2">
+                <textarea id="setup-match-import" class="form-control" rows="7" placeholder="格式：賽事項目,輪次,選手1姓名,選手2姓名&#10;例如：&#10;男子單打 (Men's Singles),第 1 輪,盧彥勳,曾俊欣&#10;男子單打 (Men's Singles),第 1 輪,許育修,莊吉生"></textarea>
+              </div>
+              <button id="btn-import-matches" class="btn btn-secondary w-full">📥 匯入自訂對戰賽程</button>
+              <small class="form-text text-secondary mt-1">提示：系統會比對選手庫姓名，若查無此人將自動新增該選手（預設自動完成報到，以利排程）。</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Players Table -->
+      <div class="card mt-4">
+        <div class="card-header flex-between">
+          <h4>📋 目前選手資料庫 (全體選手：<span id="setup-players-count">0</span> 名)</h4>
+          <button id="btn-add-player-manual" class="btn btn-sm btn-primary">+ 新增單一選手</button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>聯絡電話</th>
+                <th>報名項目</th>
+                <th>勾選贈品</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="setup-players-tbody">
+              <!-- Filled dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================
+       MODALS & OVERLAYS
+       ============================================== -->
+
+  <!-- Modal 1: Edit/Add Player Manual -->
+  <div id="player-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="player-modal-title">新增選手</h3>
+        <button class="modal-close" onclick="document.getElementById('player-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="player-form">
+          <input type="hidden" id="player-form-id">
+          <div class="form-group">
+            <label for="player-form-name">選手姓名 *</label>
+            <input type="text" id="player-form-name" class="form-control" required placeholder="請輸入姓名">
+          </div>
+          <div class="form-group">
+            <label for="player-form-phone">聯絡電話</label>
+            <input type="text" id="player-form-phone" class="form-control" placeholder="請輸入電話">
+          </div>
+          <div class="form-group">
+            <label>報名組別 (可複選)</label>
+            <div id="player-form-events" class="checkbox-group">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="player-form-gift">大會參賽禮選擇</label>
+            <select id="player-form-gift" class="form-control">
+              <option value="網球經典排汗衫 (M)">網球經典排汗衫 (M)</option>
+              <option value="網球經典排汗衫 (L)">網球經典排汗衫 (L)</option>
+              <option value="網球經典排汗衫 (XL)">網球經典排汗衫 (XL)</option>
+              <option value="專業網球三入裝">專業網球三入裝</option>
+              <option value="精美運動毛巾">精美運動毛巾</option>
+              <option value="無">不需要參賽禮</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('player-modal').classList.add('hidden')">取消</button>
+            <button type="submit" class="btn btn-primary">儲存選手</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Referee Score Entry -->
+  <div id="score-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>輸入賽事比分 (Umpire Score Entry)</h3>
+        <button class="modal-close" onclick="document.getElementById('score-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="score-form">
+          <input type="hidden" id="score-form-match-id">
+          
+          <div class="score-input-matchup">
+            <div class="score-team" id="score-team1-name">選手 A</div>
+            <div class="score-vs">VS</div>
+            <div class="score-team" id="score-team2-name">選手 B</div>
+          </div>
+
+          <div class="score-sets-container">
+            <div class="score-set-row">
+              <span class="set-label">第一盤 (Set 1)</span>
+              <input type="number" min="0" max="7" class="form-control score-box" id="score-s1-p1" required placeholder="0">
+              <span class="dash">-</span>
+              <input type="number" min="0" max="7" class="form-control score-box" id="score-s1-p2" required placeholder="0">
+            </div>
+            <div class="score-set-row">
+              <span class="set-label">第二盤 (Set 2)</span>
+              <input type="number" min="0" max="7" class="form-control score-box" id="score-s2-p1" placeholder="0">
+              <span class="dash">-</span>
+              <input type="number" min="0" max="7" class="form-control score-box" id="score-s2-p2" placeholder="0">
+            </div>
+            <div class="score-set-row">
+              <span class="set-label">決勝盤 (Super Tiebreak)</span>
+              <input type="number" min="0" max="30" class="form-control score-box" id="score-s3-p1" placeholder="0">
+              <span class="dash">-</span>
+              <input type="number" min="0" max="30" class="form-control score-box" id="score-s3-p2" placeholder="0">
+            </div>
+            <small class="form-text text-center mt-2">若是兩盤直接獲勝，決勝盤可留空。</small>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('score-modal').classList.add('hidden')">取消</button>
+            <button type="submit" class="btn btn-accent">送出比賽結果</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Certificate Print/Export Preview -->
+  <div id="certificate-modal" class="modal-overlay hidden">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3>🏆 賽事優勝證書列印</h3>
+        <button class="modal-close" onclick="document.getElementById('certificate-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body cert-modal-body">
+        <div class="cert-controls">
+          <div class="form-group">
+            <label for="cert-title">大會標題</label>
+            <input type="text" id="cert-title" class="form-control" value="2026 Breakpoint 夏季網球公開賽">
+          </div>
+          <div class="form-group">
+            <label for="cert-winner-label">名次文字</label>
+            <input type="text" id="cert-rank" class="form-control" value="冠軍 (Winner)">
+          </div>
+          <div class="form-group">
+            <label for="cert-style">證書樣式</label>
+            <select id="cert-style" class="form-control">
+              <option value="classic">經典璀璨金 (Classic Gold)</option>
+              <option value="modern">現代活力綠 (Modern Tennis Green)</option>
+              <option value="minimal">簡約象牙白 (Minimalist Clean)</option>
+            </select>
+          </div>
+          <button id="btn-print-certificate" class="btn btn-glow btn-primary w-full mt-4">🖨️ 點擊列印證書</button>
+          <button id="btn-download-certificate" class="btn btn-outline w-full mt-2">📥 下載為 PNG 圖片</button>
+        </div>
+
+        <div class="cert-preview-pane">
+          <!-- Canvas for generating the actual certificate -->
+          <canvas id="cert-canvas" width="800" height="565"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Password Authorization -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔒 管理權限認證</h3>
+        <button class="modal-close" onclick="document.getElementById('auth-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="auth-form">
+          <input type="hidden" id="auth-target-view">
+          <div class="form-group">
+            <label for="auth-password" id="auth-label">認證密碼：</label>
+            <input type="password" id="auth-password" class="form-control" required placeholder="請輸入密碼">
+            <small class="form-text text-secondary mt-1" id="auth-hint">*(預設測試密碼)*</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('auth-modal').classList.add('hidden')">取消</button>
+            <button type="submit" class="btn btn-primary">驗證登入</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-time Summon Notification Overlay (彈出召集出賽) -->
+  <div id="summon-overlay" class="summon-overlay hidden">
+    <div class="summon-card">
+      <div class="summon-tennis-icon">🎾</div>
+      <div class="summon-header">📢 選手出賽召集通知 📢</div>
+      <div class="summon-match-details">
+        <div class="summon-event" id="summon-event">男子單打 (Open)</div>
+        <div class="summon-players">
+          <span class="s-p" id="summon-p1">盧彥勳</span>
+          <span class="s-vs">VS</span>
+          <span class="s-p" id="summon-p2">曾俊欣</span>
+        </div>
+        <div class="summon-court" id="summon-court">中央球場 (Center Court)</div>
+      </div>
+      <div class="summon-instruction">
+        請立即前往指定球場報到！您有 <strong class="text-accent">10 分鐘</strong> 的抵達緩衝時間。<br>
+        <span class="text-secondary small">（逾時裁判得判定棄賽）</span>
+      </div>
+      <button class="btn btn-accent mt-4" id="btn-close-summon">我知道了，關閉通知</button>
+    </div>
+  </div>
+
+  <!-- Audio Context Activation Dialog (Chrome policy requires user interaction before audio plays) -->
+  <div id="audio-init-banner" class="audio-init-banner">
+    <div class="banner-content">
+      <span>🔔 為了能即時接收廣播語音與出賽呼叫音效，請點擊右方按鈕啟用。</span>
+      <button id="btn-init-audio" class="btn btn-sm btn-primary">開啟音效</button>
+    </div>
+  </div>
+
+  <!-- Main Application Script (with cache busting) -->
+  <script type="module" src="app.js?v=4"></script>
+</body>
+</html>
