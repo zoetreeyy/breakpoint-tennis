@@ -579,7 +579,7 @@ export function renderStaffDashboard(state) {
       const p2Name = p2 ? p2.name : (match.player2Id === 'BYE' ? 'BYE' : '等候對手');
 
       const isBye = match.player1Id === 'BYE' || match.player2Id === 'BYE';
-      const isTbd = !match.player1Id || !match.player2Id;
+      const isTbd = (!p1 && match.player1Id !== 'BYE') || (!p2 && match.player2Id !== 'BYE');
 
       let statusDescriptionHtml = '';
       let isAssignDisabled = false;
@@ -588,7 +588,7 @@ export function renderStaffDashboard(state) {
         statusDescriptionHtml = '<span class="badge badge-info">BYE 輪空賽</span>';
         isAssignDisabled = true;
       } else if (isTbd) {
-        statusDescriptionHtml = '<span class="badge badge-info">等候前一輪勝出者</span>';
+        statusDescriptionHtml = '<span class="badge badge-info">等候前一輪勝出者（或選手已刪除）</span>';
         isAssignDisabled = true;
       } else {
         // Evaluate Check-in requirements

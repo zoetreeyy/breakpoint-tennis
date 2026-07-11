@@ -684,6 +684,31 @@ function setupEventListeners() {
     document.getElementById('setup-match-import').value = '';
   });
 
+  // Regenerate Brackets
+  document.getElementById('btn-regenerate-brackets').addEventListener('click', () => {
+    if (state.players.length === 0) {
+      alert("選手資料庫目前無人，請先匯入或新增選手。");
+      return;
+    }
+    
+    if (confirm("重新生成各組別淘汰賽籤表會清除所有現存的比賽結果與球場調度，是否確定？")) {
+      // Clear court statuses
+      state.courts.forEach(c => {
+        c.status = 'idle';
+        c.currentMatchId = null;
+      });
+      state.matches = [];
+
+      state.events.forEach(eventName => {
+        const shouldShuffle = document.getElementById('setup-random-shuffle').checked;
+        generateBracket(state, eventName, shouldShuffle);
+      });
+      
+      saveAndRender();
+      alert("已依照目前選手名單重新產生所有的淘汰賽樹狀圖籤表！");
+    }
+  });
+
   // Edit / Delete Player lists in Setup View
   document.getElementById('setup-players-tbody').addEventListener('click', (e) => {
     const btn = e.target.closest('button');

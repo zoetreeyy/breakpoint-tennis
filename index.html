@@ -42,10 +42,7 @@
       </button>
     </nav>
 
-    <!-- Multi-tab Sim Sync Indicator -->
-    <div class="sync-badge" id="sync-status">
-      <span class="dot"></span> 跨分頁即時同步中
-    </div>
+
   </header>
 
   <!-- Main View Container -->
@@ -380,7 +377,12 @@
                 <textarea id="setup-match-import" class="form-control" rows="7" placeholder="格式：賽事項目,輪次,選手1姓名,選手2姓名&#10;例如：&#10;男子單打 (Men's Singles),第 1 輪,盧彥勳,曾俊欣&#10;男子單打 (Men's Singles),第 1 輪,許育修,莊吉生"></textarea>
               </div>
               <button id="btn-import-matches" class="btn btn-secondary w-full">📥 匯入自訂對戰賽程</button>
-              <small class="form-text text-secondary mt-1">提示：系統會比對選手庫姓名，若查無此人將自動新增該選手（預設自動完成報到，以利排程）。</small>
+              
+              <div class="mt-4 border-top pt-4">
+                <h5>🔄 重新排籤 (Regenerate Brackets)</h5>
+                <button id="btn-regenerate-brackets" class="btn btn-danger w-full mt-2">🔄 依照目前名單重新生成籤表</button>
+                <small class="form-text text-secondary mt-1">提示：若您在左側新增或修改了選手，可以點擊此按鈕重新生成所有項目的淘汰賽樹狀圖。</small>
+              </div>
             </div>
           </div>
         </div>

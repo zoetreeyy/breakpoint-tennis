@@ -160,26 +160,7 @@ body {
   box-shadow: 0 0 15px var(--accent-glow);
 }
 
-.sync-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--primary);
-  background: rgba(16, 185, 129, 0.1);
-  padding: 0.4rem 0.8rem;
-  border-radius: 12px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
 
-.sync-badge .dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--primary);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--primary);
-  animation: pulse 1.8s infinite;
-}
 
 /* Layout Elements */
 .app-content {
