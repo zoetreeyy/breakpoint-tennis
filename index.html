@@ -181,7 +181,7 @@
           🔊 測試呼叫音效
         </button>
         <div class="action-bar-desc">
-          將自動檢查可用球場，安排符合「雙方已報到」且「無30分鐘內連續出賽衝突」的下一場賽程。
+          將自動檢查可用球場，安排符合「雙方已報到」且「無在保護時間內連續出賽衝突」的下一場賽程。
         </div>
       </div>
 
@@ -230,9 +230,16 @@
       <div class="card mt-4">
         <div class="card-header flex-between">
           <h4>🕒 待排賽程與手動指派 (Schedule Queue)</h4>
-          <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
-            <option value="all">全部賽事項目</option>
-          </select>
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
+               <label for="quick-rest-buffer" class="small text-secondary m-0" style="white-space: nowrap;">保護休息時間:</label>
+               <input type="number" id="quick-rest-buffer" class="form-control" style="width: 60px; padding: 2px 4px; height: 24px; font-size: 0.85rem; text-align: center;" min="0">
+               <span class="small text-secondary">分</span>
+            </div>
+            <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
+              <option value="all">全部賽事項目</option>
+            </select>
+          </div>
         </div>
         <div class="table-container">
           <table class="data-table">
@@ -240,7 +247,7 @@
               <tr>
                 <th>項目/輪次</th>
                 <th>對戰選手</th>
-                <th>選手報到與30分保護衝突檢查</th>
+                <th id="th-conflict-check">選手報到與30分保護衝突檢查</th>
                 <th>指派球場</th>
               </tr>
             </thead>
@@ -646,6 +653,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=15"></script>
+  <script type="module" src="app.js?v=16"></script>
 </body>
 </html>

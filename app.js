@@ -10,7 +10,7 @@ import {
   loadMockDataIntoState,
   checkPlayerRestConflict,
   checkAndGenerateNextRound
-} from './state.js?v=6';
+} from './state.js?v=7';
 
 import { 
   renderPlayerSearch, 
@@ -26,7 +26,7 @@ import {
   initAudio,
   playNotificationChime,
   speakSummon
-} from './ui.js?v=8';
+} from './ui.js?v=9';
 
 let state = null;
 let activeView = 'player-view';
@@ -609,6 +609,17 @@ function setupEventListeners() {
   // Schedule Queue Filter Change Handler (Staff)
   document.getElementById('staff-queue-filter').addEventListener('change', () => {
     renderAll();
+  });
+
+  // Quick Rest Buffer Adjustment
+  document.getElementById('quick-rest-buffer').addEventListener('change', (e) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 0) {
+      state.configs.restBufferMinutes = val;
+      // sync with the setup view input too
+      document.getElementById('setup-rest-buffer').value = val;
+      saveAndRender();
+    }
   });
 
   // Upcoming Queue Filter Change Handler (Player)

@@ -15,7 +15,7 @@ function generateId() {
 }
 
 // Check if a player is in a match right now or ended one within 30 minutes
-export function checkPlayerRestConflict(player, matches, targetTime = Date.now()) {
+export function checkPlayerRestConflict(player, matches, targetTime = Date.now(), restLimit = 30) {
   if (!player.lastMatchEndedAt) return { conflict: false, remainingMin: 0 };
   
   // Check if player is currently in an active match
@@ -30,7 +30,6 @@ export function checkPlayerRestConflict(player, matches, targetTime = Date.now()
 
   const elapsedMs = targetTime - player.lastMatchEndedAt;
   const elapsedMin = elapsedMs / (1000 * 60);
-  const restLimit = 30; // 30 minutes rest
 
   if (elapsedMin < restLimit) {
     return { 
@@ -212,10 +211,11 @@ export function autoScheduleMatches(state) {
       if (p2Double && !p2Double.checkedIn) return false;
 
       // Check rest conflicts
-      const conflictP1 = checkPlayerRestConflict(p1, state.matches, now);
-      const conflictP2 = checkPlayerRestConflict(p2, state.matches, now);
-      const conflictP1D = p1Double ? checkPlayerRestConflict(p1Double, state.matches, now) : { conflict: false };
-      const conflictP2D = p2Double ? checkPlayerRestConflict(p2Double, state.matches, now) : { conflict: false };
+      const rLimit = state.configs.restBufferMinutes || 30;
+      const conflictP1 = checkPlayerRestConflict(p1, state.matches, now, rLimit);
+      const conflictP2 = checkPlayerRestConflict(p2, state.matches, now, rLimit);
+      const conflictP1D = p1Double ? checkPlayerRestConflict(p1Double, state.matches, now, rLimit) : { conflict: false };
+      const conflictP2D = p2Double ? checkPlayerRestConflict(p2Double, state.matches, now, rLimit) : { conflict: false };
 
       if (conflictP1.conflict || conflictP2.conflict || conflictP1D.conflict || conflictP2D.conflict) {
         return false;

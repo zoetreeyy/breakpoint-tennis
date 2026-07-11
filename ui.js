@@ -303,8 +303,9 @@ export function renderPlayerUpcoming(state) {
     let p2Status = p2 ? (p2.checkedIn ? '✅ 報到' : '❌ 未報到') : 'TBD';
     
     // Check conflicts
-    let conflictP1 = p1 ? checkPlayerRestConflict(p1, state.matches) : { conflict: false };
-    let conflictP2 = p2 ? checkPlayerRestConflict(p2, state.matches) : { conflict: false };
+    const rLimit = state.configs.restBufferMinutes || 30;
+    let conflictP1 = p1 ? checkPlayerRestConflict(p1, state.matches, Date.now(), rLimit) : { conflict: false };
+    let conflictP2 = p2 ? checkPlayerRestConflict(p2, state.matches, Date.now(), rLimit) : { conflict: false };
     
     let conflictText = '';
     if (conflictP1.conflict && conflictP1.reason === 'restBuffer') {
@@ -484,6 +485,16 @@ export function renderPlayerBrackets(state) {
 
 // Render Staff Dashboard (Stats, Check-in, Queue, Court Deployment)
 export function renderStaffDashboard(state) {
+  // Sync quick rest buffer input
+  const quickRestInput = document.getElementById('quick-rest-buffer');
+  if (quickRestInput) {
+    quickRestInput.value = state.configs.restBufferMinutes || 30;
+  }
+  const thConflict = document.getElementById('th-conflict-check');
+  if (thConflict) {
+    thConflict.innerText = `選手報到與 ${state.configs.restBufferMinutes || 30} 分保護衝突檢查`;
+  }
+
   // 1. Update stats indicators
   const checkedInCount = state.players.filter(p => p.checkedIn).length;
   document.getElementById('stats-total-players').innerText = state.players.length;
@@ -634,8 +645,9 @@ export function renderStaffDashboard(state) {
         statusDescriptionHtml += `報到：${p1.name}(${p1Check}) vs ${p2.name}(${p2Check})`;
 
         // Check rest constraints
-        const p1Rest = checkPlayerRestConflict(p1, state.matches);
-        const p2Rest = checkPlayerRestConflict(p2, state.matches);
+        const rLimit = state.configs.restBufferMinutes || 30;
+        const p1Rest = checkPlayerRestConflict(p1, state.matches, Date.now(), rLimit);
+        const p2Rest = checkPlayerRestConflict(p2, state.matches, Date.now(), rLimit);
 
         let restViolation = false;
         if (p1Rest.conflict && p1Rest.reason === 'restBuffer') {
