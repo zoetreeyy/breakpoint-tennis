@@ -153,6 +153,11 @@ export function renderPlayerSearch(state, nameQuery) {
         <span class="badge ${player.giftClaimed ? 'badge-success' : 'badge-warning'}">
           ${player.giftClaimed ? '已領取 Claimed' : '未領取 Unclaimed'}
         </span>
+        ${!player.giftClaimed && player.gift && player.gift !== '無' ? `
+          <button class="btn btn-sm btn-outline ml-2" id="btn-claim-gift" data-id="${player.id}" style="padding: 2px 8px; font-size: 0.8rem; margin-left: 8px;">
+            向工作人員領取
+          </button>
+        ` : ''}
       </div>
     </div>
     
@@ -490,10 +495,10 @@ export function renderStaffDashboard(state) {
   const completedMatches = state.matches.filter(m => m.status === 'completed' || m.status === 'defaulted').length;
   document.getElementById('stats-completed-matches').innerText = `${completedMatches} / ${state.matches.length}`;
 
-  // 2. Render Check-in & Gift claim grid
+  // 2. Render Check-in & Gift claim table
   const searchInput = document.getElementById('staff-player-search').value.toLowerCase();
-  const checkinGrid = document.getElementById('staff-checkin-grid');
-  checkinGrid.innerHTML = '';
+  const checkinTbody = document.getElementById('staff-checkin-tbody');
+  checkinTbody.innerHTML = '';
 
   const filteredPlayers = state.players.filter(p => 
     p.name.toLowerCase().includes(searchInput) || 
@@ -501,40 +506,28 @@ export function renderStaffDashboard(state) {
   );
 
   if (filteredPlayers.length === 0) {
-    checkinGrid.innerHTML = `<div class="text-center text-secondary" style="grid-column: 1 / -1; padding: 2rem;">找不到相符的選手。</div>`;
+    checkinTbody.innerHTML = `<tr><td colspan="5" class="text-center text-secondary">找不到相符的選手。</td></tr>`;
   } else {
     filteredPlayers.forEach(player => {
-      const card = document.createElement('div');
-      card.className = 'card p-3';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.gap = '0.75rem';
-      card.style.margin = '0';
-      card.style.backgroundColor = 'var(--bg-secondary)';
-      card.style.border = '1px solid var(--border)';
-      
-      card.innerHTML = `
-        <div class="flex-between">
-          <strong style="font-size: 1.1rem; color: var(--text-primary);">${player.name}</strong>
-          <span class="text-secondary small">📞 ${player.phone || '無電話'}</span>
-        </div>
-        <div class="text-secondary small" style="min-height: 2.5rem;">
-          ${player.events.join('<br>') || '無'}
-        </div>
-        <div class="flex-between" style="border-top: 1px solid var(--border); padding-top: 0.5rem;">
-          <span class="small text-secondary">參賽禮</span>
-          <strong class="text-accent">${player.gift}</strong>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.25rem;">
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${player.name}</strong><br><small class="text-secondary">${player.phone}</small></td>
+        <td class="small text-secondary">${player.events.join('<br>') || '無'}</td>
+        <td>
+          <span class="small font-bold">${player.gift}</span>
+        </td>
+        <td>
           <button class="btn btn-sm ${player.checkedIn ? 'btn-primary' : 'btn-outline-accent'}" data-action="toggle-checkin" data-id="${player.id}">
-            ${player.checkedIn ? '✅ 已報到' : '🔲 點擊報到'}
+            ${player.checkedIn ? '✅ 已完成' : '🔲 點擊報到'}
           </button>
+        </td>
+        <td>
           <button class="btn btn-sm ${player.giftClaimed ? 'btn-secondary' : 'btn-outline'}" data-action="toggle-gift" data-id="${player.id}" ${!player.checkedIn ? 'disabled' : ''}>
             ${player.giftClaimed ? '🎁 已領取' : '🎁 點擊領取'}
           </button>
-        </div>
+        </td>
       `;
-      checkinGrid.appendChild(card);
+      checkinTbody.appendChild(tr);
     });
   }
 
@@ -1130,6 +1123,110 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
     // Decorative small text
     ctx.font = '10px Outfit, sans-serif';
     ctx.fillText('ACE TENNIS FEDERATION', width / 2, 510);
+  }
+}
+
+// ==========================================
+// COURT MAP BUILDER & VIEWER
+// ==========================================
+
+export function renderSetupCourtMapBuilder(state) {
+  const container = document.getElementById('setup-court-map-grid');
+  if (!container) return;
+
+  container.innerHTML = '';
+  const mapData = state.configs.courtMap || Array(25).fill(null);
+
+  // Generate options for the select
+  const courtOptionsHtml = state.courts.map(c => `<option value="${c.id}">🎾 ${c.name.split(' ')[0]}</option>`).join('');
+
+  for (let i = 0; i < 25; i++) {
+    const val = mapData[i] || '';
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <select class="form-control setup-court-map-select" style="text-align: center; height: 100%; min-height: 50px; font-size: 0.9rem;">
+        <option value="">(空白)</option>
+        <option value="desk" ${val === 'desk' ? 'selected' : ''}>🌟 大會 (Desk)</option>
+        <option value="practice" ${val === 'practice' ? 'selected' : ''}>🎾 練習球場</option>
+        ${state.courts.map(c => `<option value="${c.id}" ${val === c.id ? 'selected' : ''}>🎾 ${c.name.split(' ')[0]}</option>`).join('')}
+      </select>
+    `;
+    container.appendChild(div);
+  }
+}
+
+export function renderPlayerCourtMap(state) {
+  const card = document.getElementById('player-court-map-card');
+  const container = document.getElementById('player-court-map-grid');
+  if (!card || !container) return;
+
+  const mapData = state.configs.courtMap || Array(25).fill(null);
+
+  // If map is completely empty, hide the card
+  if (mapData.every(val => !val)) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  container.innerHTML = '';
+
+  for (let i = 0; i < 25; i++) {
+    const val = mapData[i];
+    const cell = document.createElement('div');
+    cell.style.minHeight = '70px';
+    cell.style.borderRadius = '8px';
+    cell.style.display = 'flex';
+    cell.style.flexDirection = 'column';
+    cell.style.alignItems = 'center';
+    cell.style.justifyContent = 'center';
+    cell.style.textAlign = 'center';
+    cell.style.padding = '0.5rem';
+    cell.style.border = '1px dashed transparent';
+    cell.style.transition = 'all 0.3s ease';
+
+    if (!val) {
+      // Empty cell
+      cell.style.border = '1px dashed rgba(255,255,255,0.05)';
+    } else if (val === 'desk') {
+      // Tournament Desk
+      cell.style.backgroundColor = 'var(--accent)';
+      cell.style.color = '#fff';
+      cell.style.boxShadow = '0 0 10px rgba(0, 210, 255, 0.3)';
+      cell.innerHTML = `
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🌟</span>
+        <strong style="font-size: 0.9rem;">大會服務台</strong>
+      `;
+    } else if (val === 'practice') {
+      // Practice Court
+      cell.style.backgroundColor = 'var(--bg-card)';
+      cell.style.border = '1px dashed var(--text-secondary)';
+      cell.style.color = 'var(--text-secondary)';
+      cell.innerHTML = `
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🎾</span>
+        <strong style="font-size: 0.9rem;">練習球場</strong>
+      `;
+    } else {
+      // Court
+      const court = state.courts.find(c => c.id === val);
+      if (court) {
+        const isOccupied = court.status === 'occupied' || court.status === 'live';
+        cell.style.backgroundColor = isOccupied ? 'var(--warning-bg)' : 'var(--bg-card)';
+        cell.style.border = isOccupied ? '1px solid var(--warning)' : '1px solid var(--border)';
+        
+        const statusText = isOccupied ? '<span class="text-warning small" style="margin-top:4px;">● 比賽中</span>' : '<span class="text-success small" style="margin-top:4px;">○ 空閒</span>';
+
+        cell.innerHTML = `
+          <strong style="font-size: 0.95rem;">${court.name.split(' ')[0]}</strong>
+          ${statusText}
+        `;
+      } else {
+        // Obsolete court ID
+        cell.style.border = '1px dashed rgba(255,255,255,0.05)';
+      }
+    }
+
+    container.appendChild(cell);
   }
 }
 

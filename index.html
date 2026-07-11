@@ -70,6 +70,18 @@
         </div>
       </div>
 
+      <!-- Court Map Viewer (Player View) -->
+      <div class="card mb-4" id="player-court-map-card" style="display: none;">
+        <div class="card-header">
+          <h4>🗺️ 大會場地配置示意圖 (Court Map)</h4>
+        </div>
+        <div class="card-body p-0">
+          <div id="player-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 1.5rem; background: var(--bg-secondary);">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
       <!-- Court Status Grid -->
       <div class="section-header">
         <h3>🏟️ 各球場即時賽況 (Live Court Board)</h3>
@@ -182,12 +194,21 @@
               <input type="text" id="staff-player-search" class="form-control" placeholder="搜尋選手姓名/電話...">
             </div>
           </div>
-          <div class="card-body p-0">
-            <div style="max-height: 500px; overflow-y: auto; padding: 1rem;">
-              <div id="staff-checkin-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+          <div class="table-container" style="max-height: 480px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>參賽項目</th>
+                  <th>參賽禮選擇</th>
+                  <th>報到狀態</th>
+                  <th>領取狀態</th>
+                </tr>
+              </thead>
+              <tbody id="staff-checkin-tbody">
                 <!-- Rendered dynamically -->
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
         </div>
 
@@ -202,31 +223,31 @@
               <!-- Rendered dynamically -->
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Pending Schedule & Assignment -->
-          <div class="card">
-            <div class="card-header flex-between">
-              <h4>🕒 待排賽程與手動指派 (Schedule Queue)</h4>
-              <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
-                <option value="all">全部賽事項目</option>
-              </select>
-            </div>
-            <div class="table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>項目/輪次</th>
-                    <th>對戰選手</th>
-                    <th>選手報到與30分保護衝突檢查</th>
-                    <th>指派球場</th>
-                  </tr>
-                </thead>
-                <tbody id="staff-match-queue-tbody">
-                  <!-- Rendered dynamically -->
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <!-- Pending Schedule & Assignment (Moved out for full width) -->
+      <div class="card mt-4">
+        <div class="card-header flex-between">
+          <h4>🕒 待排賽程與手動指派 (Schedule Queue)</h4>
+          <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
+            <option value="all">全部賽事項目</option>
+          </select>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>項目/輪次</th>
+                <th>對戰選手</th>
+                <th>選手報到與30分保護衝突檢查</th>
+                <th>指派球場</th>
+              </tr>
+            </thead>
+            <tbody id="staff-match-queue-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -298,6 +319,12 @@
               <input type="number" id="setup-summon-limit" class="form-control" value="10">
             </div>
 
+            <div class="form-group mt-3 border-top pt-3">
+              <label for="setup-gift-claim-code">🔑 參賽禮物領取驗證碼 (工作人員專用)</label>
+              <input type="text" id="setup-gift-claim-code" class="form-control" value="8888" placeholder="例如：8888">
+              <small class="form-text">選手在自己手機出示畫面時，由工作人員輸入此密碼完成領取確認，預設為 8888。</small>
+            </div>
+
             <div class="form-group mt-4 border-top pt-4">
               <label>⚠️ 系統危險操作</label>
               <div class="button-group mt-2">
@@ -362,6 +389,20 @@
               <!-- Filled dynamically -->
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Court Map Builder (Setup View) -->
+      <div class="card mt-4">
+        <div class="card-header flex-between">
+          <h4>🗺️ 場地配置圖設計 (Court Map Builder)</h4>
+          <button id="btn-save-court-map" class="btn btn-sm btn-primary">💾 儲存配置</button>
+        </div>
+        <div class="card-body">
+          <p class="text-secondary small">以 5x5 的網格規劃場地。點選每一格的選單，即可配置「大會」或「各個球場」的相對位置。配置完成後請點擊儲存，此圖將顯示於選手看板中。</p>
+          <div id="setup-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-top: 1rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
     </section>
@@ -605,6 +646,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=13"></script>
+  <script type="module" src="app.js?v=15"></script>
 </body>
 </html>

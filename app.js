@@ -10,7 +10,7 @@ import {
   loadMockDataIntoState,
   checkPlayerRestConflict,
   checkAndGenerateNextRound
-} from './state.js?v=4';
+} from './state.js?v=6';
 
 import { 
   renderPlayerSearch, 
@@ -20,11 +20,13 @@ import {
   renderStaffDashboard, 
   renderRefereePanel, 
   renderSetupPlayers, 
+  renderSetupCourtMapBuilder,
+  renderPlayerCourtMap,
   drawCertificate,
   initAudio,
   playNotificationChime,
   speakSummon
-} from './ui.js?v=6';
+} from './ui.js?v=8';
 
 let state = null;
 let activeView = 'player-view';
@@ -75,12 +77,14 @@ function init() {
 // Global renderer
 function renderAll() {
   // Update state indicators & layouts
+  renderPlayerCourtMap(state);
   renderPlayerCourts(state);
   renderPlayerUpcoming(state);
   renderPlayerBrackets(state);
   renderStaffDashboard(state);
   renderRefereePanel(state);
   renderSetupPlayers(state);
+  renderSetupCourtMapBuilder(state);
 }
 
 // Local save state and dispatch render
@@ -332,12 +336,13 @@ function setupEventListeners() {
 
   // Player self check-in click handler
   document.getElementById('player-search-result').addEventListener('click', (e) => {
-    const btn = e.target.closest('#btn-self-checkin');
-    if (!btn) return;
+    const btnCheckin = e.target.closest('#btn-self-checkin');
+    const btnGift = e.target.closest('#btn-claim-gift');
     
-    const playerId = btn.getAttribute('data-id');
-    const playerObj = state.players.find(p => p.id === playerId);
-    if (playerObj) {
+    if (btnCheckin) {
+      const playerId = btnCheckin.getAttribute('data-id');
+      const playerObj = state.players.find(p => p.id === playerId);
+      if (playerObj) {
       const inputPhone = window.prompt(`為了保護您的隱私，請輸入【${playerObj.name}】報名時留的「聯絡電話」以完成身分驗證：`);
       
       // If user clicked cancel on the prompt
@@ -354,7 +359,25 @@ function setupEventListeners() {
         renderPlayerSearch(state, playerObj.name);
         alert(`${playerObj.name} 選手，驗證成功！您已完成自主報到。請注意場地點名與大會召集廣播！`);
       } else {
-        alert('❌ 驗證失敗：您輸入的聯絡電話與系統紀錄不符。請再試一次，或前往大會服務台由工作人員協助報到。');
+        alert("驗證失敗：聯絡電話輸入錯誤，請確認後再試。");
+      }
+    }
+  } else if (btnGift) {
+      const playerId = btnGift.getAttribute('data-id');
+      const playerObj = state.players.find(p => p.id === playerId);
+      if (playerObj && !playerObj.giftClaimed) {
+        const inputCode = window.prompt(`【工作人員專用】請輸入發放參賽禮物的「驗證碼」以確認發放：`);
+        if (inputCode === null) return; // Cancelled
+        
+        const correctCode = state.configs.giftClaimCode || '8888';
+        if (inputCode.trim() === correctCode.trim()) {
+          playerObj.giftClaimed = true;
+          saveAndRender();
+          renderPlayerSearch(state, playerObj.name);
+          alert(`✅ 已成功確認發放贈品給 ${playerObj.name}！`);
+        } else {
+          alert("❌ 驗證碼錯誤，無法確認發放！");
+        }
       }
     }
   });
@@ -400,11 +423,14 @@ function setupEventListeners() {
       // Re-create courts keeping occupied ones if possible, or reset
       const newCourts = [];
       for (let i = 1; i <= val; i++) {
+        const letter = String.fromCharCode(64 + i);
+        const courtName = `${letter}球場 (Court ${letter})`;
         const existing = state.courts.find(c => c.id === `c${i}`);
         if (existing) {
+          existing.name = courtName;
           newCourts.push(existing);
         } else {
-          newCourts.push({ id: `c${i}`, name: `${i}號球場 (Court ${i})`, status: 'idle', currentMatchId: null });
+          newCourts.push({ id: `c${i}`, name: courtName, status: 'idle', currentMatchId: null });
         }
       }
       state.courts = newCourts;
@@ -412,7 +438,10 @@ function setupEventListeners() {
       // Update rest limit and summon limit config
       state.configs.restBufferMinutes = parseInt(document.getElementById('setup-rest-buffer').value) || 30;
       state.configs.summonLimitMinutes = parseInt(document.getElementById('setup-summon-limit').value) || 10;
+      state.configs.giftClaimCode = document.getElementById('setup-gift-claim-code').value || '8888';
       
+      // Provide a clean slate for the court map when courts are updated
+      state.configs.courtMap = Array(25).fill(null);
       saveAndRender();
       alert(`成功設定 ${val} 面球場與比賽參數。`);
     }
@@ -585,6 +614,16 @@ function setupEventListeners() {
   // Upcoming Queue Filter Change Handler (Player)
   document.getElementById('player-queue-filter').addEventListener('change', () => {
     renderAll();
+  });
+
+  // Save Court Map Configuration
+  document.getElementById('btn-save-court-map').addEventListener('click', () => {
+    const selects = document.querySelectorAll('.setup-court-map-select');
+    const newMap = Array.from(selects).map(select => select.value || null);
+    
+    state.configs.courtMap = newMap;
+    saveAndRender();
+    alert("場地配置示意圖已成功儲存！");
   });
 
   // Edit / Delete Player lists in Setup View

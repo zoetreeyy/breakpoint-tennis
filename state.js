@@ -46,17 +46,19 @@ export function checkPlayerRestConflict(player, matches, targetTime = Date.now()
 export function getInitialState() {
   return {
     courts: [
-      { id: 'c1', name: '中央球場 (Center Court)', status: 'idle', currentMatchId: null },
-      { id: 'c2', name: '第一球場 (Court 1)', status: 'idle', currentMatchId: null },
-      { id: 'c3', name: '第二球場 (Court 2)', status: 'idle', currentMatchId: null },
-      { id: 'c4', name: '第三球場 (Court 3)', status: 'idle', currentMatchId: null }
+      { id: 'c1', name: 'A球場 (Court A)', status: 'idle', currentMatchId: null },
+      { id: 'c2', name: 'B球場 (Court B)', status: 'idle', currentMatchId: null },
+      { id: 'c3', name: 'C球場 (Court C)', status: 'idle', currentMatchId: null },
+      { id: 'c4', name: 'D球場 (Court D)', status: 'idle', currentMatchId: null }
     ],
     players: [],
     events: [...DEFAULT_EVENTS],
     matches: [],
     configs: {
       restBufferMinutes: 30,
-      summonLimitMinutes: 10
+      summonLimitMinutes: 10,
+      giftClaimCode: '8888',
+      courtMap: Array(25).fill(null)
     }
   };
 }
@@ -124,6 +126,13 @@ export function initSystemState(onStateChangeCallback) {
 
       const parsedMatches = Array.isArray(data.matches) ? data.matches : Object.values(data.matches || []);
       const parsedCourts = Array.isArray(data.courts) ? data.courts : Object.values(data.courts || []);
+      
+      // Data Normalization: Force all existing courts to use the A, B, C, D naming scheme
+      parsedCourts.forEach((c, index) => {
+        const letter = String.fromCharCode(65 + index); // 0 -> A, 1 -> B
+        c.name = `${letter}球場 (Court ${letter})`;
+      });
+
       const parsedEvents = Array.isArray(data.events) ? data.events : Object.values(data.events || []);
 
       currentState = {
@@ -131,7 +140,14 @@ export function initSystemState(onStateChangeCallback) {
         players: parsedPlayers,
         events: parsedEvents.length > 0 ? parsedEvents : defaults.events,
         matches: parsedMatches,
-        configs: { ...defaults.configs, ...(data.configs || {}) }
+        configs: { 
+          ...defaults.configs, 
+          ...(data.configs || {}),
+          courtMap: Array.from({ length: 25 }, (_, i) => {
+            const mapData = data.configs && data.configs.courtMap ? data.configs.courtMap : {};
+            return mapData[i] || null;
+          })
+        }
       };
     } else {
       // Initialize Firebase with defaults if completely empty
