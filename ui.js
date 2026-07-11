@@ -490,10 +490,10 @@ export function renderStaffDashboard(state) {
   const completedMatches = state.matches.filter(m => m.status === 'completed' || m.status === 'defaulted').length;
   document.getElementById('stats-completed-matches').innerText = `${completedMatches} / ${state.matches.length}`;
 
-  // 2. Render Check-in & Gift claim table
+  // 2. Render Check-in & Gift claim grid
   const searchInput = document.getElementById('staff-player-search').value.toLowerCase();
-  const checkinTbody = document.getElementById('staff-checkin-tbody');
-  checkinTbody.innerHTML = '';
+  const checkinGrid = document.getElementById('staff-checkin-grid');
+  checkinGrid.innerHTML = '';
 
   const filteredPlayers = state.players.filter(p => 
     p.name.toLowerCase().includes(searchInput) || 
@@ -501,28 +501,40 @@ export function renderStaffDashboard(state) {
   );
 
   if (filteredPlayers.length === 0) {
-    checkinTbody.innerHTML = `<tr><td colspan="5" class="text-center text-secondary">找不到相符的選手。</td></tr>`;
+    checkinGrid.innerHTML = `<div class="text-center text-secondary" style="grid-column: 1 / -1; padding: 2rem;">找不到相符的選手。</div>`;
   } else {
     filteredPlayers.forEach(player => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${player.name}</strong><br><small class="text-secondary">${player.phone}</small></td>
-        <td class="small text-secondary">${player.events.join('<br>') || '無'}</td>
-        <td>
-          <span class="small font-bold">${player.gift}</span>
-        </td>
-        <td>
+      const card = document.createElement('div');
+      card.className = 'card p-3';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.gap = '0.75rem';
+      card.style.margin = '0';
+      card.style.backgroundColor = 'var(--bg-secondary)';
+      card.style.border = '1px solid var(--border)';
+      
+      card.innerHTML = `
+        <div class="flex-between">
+          <strong style="font-size: 1.1rem; color: var(--text-primary);">${player.name}</strong>
+          <span class="text-secondary small">📞 ${player.phone || '無電話'}</span>
+        </div>
+        <div class="text-secondary small" style="min-height: 2.5rem;">
+          ${player.events.join('<br>') || '無'}
+        </div>
+        <div class="flex-between" style="border-top: 1px solid var(--border); padding-top: 0.5rem;">
+          <span class="small text-secondary">參賽禮</span>
+          <strong class="text-accent">${player.gift}</strong>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.25rem;">
           <button class="btn btn-sm ${player.checkedIn ? 'btn-primary' : 'btn-outline-accent'}" data-action="toggle-checkin" data-id="${player.id}">
-            ${player.checkedIn ? '✅ 已完成' : '🔲 點擊報到'}
+            ${player.checkedIn ? '✅ 已報到' : '🔲 點擊報到'}
           </button>
-        </td>
-        <td>
           <button class="btn btn-sm ${player.giftClaimed ? 'btn-secondary' : 'btn-outline'}" data-action="toggle-gift" data-id="${player.id}" ${!player.checkedIn ? 'disabled' : ''}>
             ${player.giftClaimed ? '🎁 已領取' : '🎁 點擊領取'}
           </button>
-        </td>
+        </div>
       `;
-      checkinTbody.appendChild(tr);
+      checkinGrid.appendChild(card);
     });
   }
 
