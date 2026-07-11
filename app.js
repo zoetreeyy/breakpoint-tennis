@@ -418,15 +418,6 @@ function setupEventListeners() {
     }
   });
 
-  // Load Mock Data
-  document.getElementById('btn-load-mock').addEventListener('click', () => {
-    if (confirm("載入演示資料將覆蓋目前的所有選手與賽程，是否確定？")) {
-      state = getInitialState();
-      loadMockDataIntoState(state);
-      saveAndRender();
-      alert("大會 16 人淘汰賽簽表與演示資料載入成功！");
-    }
-  });
 
   // Reset all
   document.getElementById('btn-reset-all').addEventListener('click', () => {
@@ -505,30 +496,6 @@ function setupEventListeners() {
     }
   });
 
-  // Generate brackets
-  document.getElementById('btn-generate-brackets').addEventListener('click', () => {
-    if (state.players.length === 0) {
-      alert("選手資料庫目前無人，請先匯入選手名單。");
-      return;
-    }
-    
-    if (confirm("重新生成各組別淘汰賽簽表會清除所有現存的比賽結果與球場調度，是否確定？")) {
-      // Clear court statuses
-      state.courts.forEach(c => {
-        c.status = 'idle';
-        c.currentMatchId = null;
-      });
-      state.matches = [];
-
-      state.events.forEach(eventName => {
-        const shouldShuffle = document.getElementById('setup-random-shuffle').checked;
-        generateBracket(state, eventName, shouldShuffle);
-      });
-      
-      saveAndRender();
-      alert("已為所有賽事項目重新產生淘汰賽對戰簽表！");
-    }
-  });
 
   // Manual Add Player Button
   document.getElementById('btn-add-player-manual').addEventListener('click', () => {
@@ -726,30 +693,47 @@ function setupEventListeners() {
     const playerId = btn.getAttribute('data-id');
     
     if (action === 'edit-player') {
-      const p = state.players.find(p => p.id === playerId);
-      if (p) {
-        document.getElementById('player-modal-title').innerText = '修改選手資料';
-        document.getElementById('player-form-id').value = p.id;
-        document.getElementById('player-form-name').value = p.name;
-        document.getElementById('player-form-phone').value = p.phone || '';
-        document.getElementById('player-form-gift').value = p.gift || '無';
-        
-        // Checkboxes
-        const chkGroup = document.getElementById('player-form-events');
-        chkGroup.innerHTML = '';
-        state.events.forEach(ev => {
-          const checked = p.events.includes(ev) ? 'checked' : '';
-          const lbl = document.createElement('label');
-          lbl.innerHTML = `<input type="checkbox" name="player-modal-events" value="${ev}" ${checked}> ${ev}`;
-          chkGroup.appendChild(lbl);
-        });
-        
-        document.getElementById('player-modal').classList.remove('hidden');
+      try {
+        const p = state.players.find(p => p.id === playerId);
+        if (p) {
+          document.getElementById('player-modal-title').innerText = '修改選手資料';
+          document.getElementById('player-form-id').value = p.id;
+          document.getElementById('player-form-name').value = p.name;
+          document.getElementById('player-form-phone').value = p.phone || '';
+          document.getElementById('player-form-gift').value = p.gift || '無';
+          
+          // Checkboxes
+          const chkGroup = document.getElementById('player-form-events');
+          chkGroup.innerHTML = '';
+          const playerEvents = Array.isArray(p.events) ? p.events : [];
+          (state.events || []).forEach(ev => {
+            const checked = playerEvents.includes(ev) ? 'checked' : '';
+            const lbl = document.createElement('label');
+            lbl.innerHTML = `<input type="checkbox" name="player-modal-events" value="${ev}" ${checked}> ${ev}`;
+            chkGroup.appendChild(lbl);
+          });
+          
+          document.getElementById('player-modal').classList.remove('hidden');
+        }
+      } catch (err) {
+        alert("修改功能發生錯誤：" + err.message);
       }
     } else if (action === 'delete-player') {
       if (confirm("確定要刪除這名選手嗎？此舉將從資料庫中移除。")) {
-        state.players = state.players.filter(p => p.id !== playerId);
-        saveAndRender();
+        try {
+          // Robust deletion
+          const originalLength = state.players.length;
+          state.players = state.players.filter(p => p.id !== playerId);
+          
+          if (state.players.length < originalLength) {
+            saveAndRender();
+            alert("已成功從資料庫中刪除該名選手！");
+          } else {
+            alert("找不到該選手，或者已經被刪除了。");
+          }
+        } catch (err) {
+          alert("刪除功能發生錯誤：" + err.message);
+        }
       }
     }
   });

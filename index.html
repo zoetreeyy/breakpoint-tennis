@@ -57,7 +57,7 @@
     <section id="player-view" class="view-panel active">
       <div class="player-hero">
         <div class="hero-content">
-          <h2>即時賽事看板 & 選手查詢</h2>
+          <h2>選手自主報到與資料查詢</h2>
           <p>輸入您的姓名查詢報名賽事、參賽禮物狀態及預計賽程，或查看下方球場即時比分與出賽召集。</p>
           
           <!-- Player Info Lookup -->
@@ -303,16 +303,12 @@
             </div>
 
             <div class="form-group mt-4 border-top pt-4">
-              <label>⚠️ 測試與演示控制</label>
+              <label>⚠️ 系統危險操作</label>
               <div class="button-group mt-2">
-                <button id="btn-load-mock" class="btn btn-outline-accent">
-                  🔄 載入 16 人大會演示資料 (含自動晉級與衝突範例)
-                </button>
                 <button id="btn-reset-all" class="btn btn-danger">
                   🗑️ 刪除全部資料，重置為空白
                 </button>
               </div>
-              <small class="form-text text-warning mt-2">提示：載入演示資料將自動產生 3 個組別的淘汰賽簽表，並預設好部分賽事結果，以便您立即測試所有功能。</small>
             </div>
           </div>
         </div>
@@ -338,10 +334,9 @@
                 </label>
               </div>
               <div class="button-group mt-2">
-                <button id="btn-import-players" class="btn btn-secondary">📥 開始解析並匯入選手</button>
-                <button id="btn-generate-brackets" class="btn btn-outline-primary">🏆 一鍵重新生成各組別淘汰賽簽表</button>
+                <button id="btn-import-players" class="btn btn-secondary">📥 開始解析並匯入選手 (系統將自動排籤)</button>
               </div>
-              <small class="form-text">匯入時，系統會自動在選手資料庫中累加。重新生成簽表會清除該組別現有的比分記錄。</small>
+              <small class="form-text mt-2">匯入時，系統會自動在選手資料庫中累加，並自動依據勾選規則產生第一輪對戰簽表。</small>
             </div>
           </div>
         </div>
