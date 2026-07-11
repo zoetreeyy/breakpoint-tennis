@@ -1399,3 +1399,38 @@ textarea.form-control {
       margin: 0;
     }
   }
+
+/* Mobile Adjustments for Summon Overlay */
+@media (max-width: 600px) {
+  .summon-card {
+    padding: 1.5rem;
+    width: 95%;
+  }
+  .summon-tennis-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .summon-header {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .summon-match-details {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .summon-players {
+    gap: 0.5rem;
+  }
+  .summon-players .s-p {
+    font-size: 1.3rem;
+  }
+  .summon-court {
+    font-size: 1.2rem;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+  }
+  .summon-instruction {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+}

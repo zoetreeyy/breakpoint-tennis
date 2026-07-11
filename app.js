@@ -199,15 +199,31 @@ function setupEventListeners() {
     });
   });
   
+  // Helper to switch to referee trap mode
+  const checkRefereeAuth = () => {
+    if (localStorage.getItem('referee_auth') === 'true') {
+      const targetBtn = document.querySelector('.nav-btn[data-view="referee-panel"]');
+      if (targetBtn) targetBtn.click();
+      
+      const viewSelector = document.querySelector('.view-selector');
+      if (viewSelector) viewSelector.style.display = 'none';
+      
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      if (mobileBtn) mobileBtn.style.display = 'none';
+    }
+  };
+
   // Check admin authorization on load
-  const checkAdminAuth = () => {
+  const checkAuth = () => {
     if (localStorage.getItem('admin_auth') === 'true') {
       document.querySelectorAll('.admin-only').forEach(btn => {
         btn.style.display = 'flex'; // Nav buttons use flex in this template
       });
+    } else if (localStorage.getItem('referee_auth') === 'true') {
+      setTimeout(() => checkRefereeAuth(), 100);
     }
   };
-  checkAdminAuth();
+  checkAuth();
 
   // Secret Portal Logic (5 clicks on logo)
   const logo = document.querySelector('.logo');
@@ -221,17 +237,26 @@ function setupEventListeners() {
       
       if (logoClickCount >= 5) {
         logoClickCount = 0;
-        if (localStorage.getItem('admin_auth') !== 'true') {
+        if (localStorage.getItem('admin_auth') !== 'true' && localStorage.getItem('referee_auth') !== 'true') {
           document.getElementById('auth-password').value = '';
           document.getElementById('auth-modal').classList.remove('hidden');
         } else {
-          // Toggle off admin mode for convenience
-          if (confirm("您目前已處於「全站管理員模式」。是否要登出並隱藏後台按鈕？")) {
+          // Toggle off admin/referee mode for convenience
+          if (confirm("您目前已處於「系統後台模式」。是否要登出並恢復一般選手視角？")) {
             localStorage.removeItem('admin_auth');
+            localStorage.removeItem('referee_auth');
+            
             document.querySelectorAll('.admin-only').forEach(btn => {
               btn.style.display = 'none';
             });
-            // Switch back to player view if they are on an admin tab
+            
+            const viewSelector = document.querySelector('.view-selector');
+            if (viewSelector) viewSelector.style.display = '';
+            
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            if (mobileBtn) mobileBtn.style.display = '';
+            
+            // Switch back to player view
             if (activeView !== 'player-view') {
               document.querySelector('.nav-btn[data-view="player-view"]').click();
             }
@@ -254,8 +279,13 @@ function setupEventListeners() {
       if (pwd === 'admin123') {
         localStorage.setItem('admin_auth', 'true');
         document.getElementById('auth-modal').classList.add('hidden');
-        checkAdminAuth();
-        alert("✅ 管理員驗證成功！已為您開啟系統後台選單。");
+        checkAuth();
+        alert("✅ 管理員驗證成功！已為您開啟全系統後台選單。");
+      } else if (pwd === 'ref123') {
+        localStorage.setItem('referee_auth', 'true');
+        document.getElementById('auth-modal').classList.add('hidden');
+        checkAuth();
+        alert("✅ 裁判驗證成功！已進入防呆裁判專屬控制台。");
       } else {
         alert("密碼錯誤，請重新輸入。");
         document.getElementById('auth-password').value = '';
@@ -272,10 +302,6 @@ function setupEventListeners() {
   }
 
 
-  // 2. Audio Initialization Banner
-  document.getElementById('btn-init-audio').addEventListener('click', () => {
-    initAudio();
-  });
   
   // Also check if AudioContext is already initialized, else show banner
   // (Standard browser security policy)

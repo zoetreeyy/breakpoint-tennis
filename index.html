@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -568,17 +568,7 @@
     </div>
   </div>
   
-  <!-- Modal 2: Initial Audio Context Banner -->
-  <div id="audio-init-banner" class="modal-overlay hidden" style="z-index: 9999;">
-    <div class="modal-card text-center" style="max-width: 400px;">
-      <h3 class="mb-3">🔊 系統廣播授權</h3>
-      <p class="text-secondary mb-4">裁判與工作人員專用：請點擊下方按鈕以允許瀏覽器在此分頁播放大會的召集語音廣播與音效。</p>
-      <div class="flex flex-column gap-2">
-        <button class="btn btn-accent btn-glow" id="btn-init-audio">授權音訊播放並進入系統</button>
-        <button class="btn btn-outline" onclick="document.getElementById('audio-init-banner').classList.add('hidden')">稍後再設定</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Modal 3: Certificate Print Generator -->
   <div id="certificate-modal" class="modal-overlay hidden">
@@ -616,28 +606,7 @@
     </div>
   </div>
 
-  <!-- Modal 4: Password Authorization -->
-  <div id="auth-modal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>🔒 管理權限認證</h3>
-        <button class="modal-close" onclick="document.getElementById('auth-modal').classList.add('hidden')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="auth-form">
-          <input type="hidden" id="auth-target-view">
-          <div class="form-group">
-            <label for="auth-password" id="auth-label">認證密碼：</label>
-            <input type="password" id="auth-password" class="form-control" required placeholder="請輸入密碼">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline" onclick="document.getElementById('auth-modal').classList.add('hidden')">取消</button>
-            <button type="submit" class="btn btn-primary">驗證登入</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Real-time Summon Notification Overlay (彈出召集出賽) -->
   <div id="summon-overlay" class="summon-overlay hidden">
@@ -661,13 +630,7 @@
     </div>
   </div>
 
-  <!-- Audio Context Activation Dialog (Chrome policy requires user interaction before audio plays) -->
-  <div id="audio-init-banner" class="audio-init-banner">
-    <div class="banner-content">
-      <span>🔔 為了能即時接收廣播語音與出賽呼叫音效，請點擊右方按鈕啟用。</span>
-      <button id="btn-init-audio" class="btn btn-sm btn-primary">開啟音效</button>
-    </div>
-  </div>
+
 
   <!-- Modal 4: Global Admin Authentication -->
   <div id="auth-modal" class="modal-overlay hidden">
@@ -679,12 +642,12 @@
       <div class="modal-body">
         <form id="auth-form">
           <div class="form-group">
-            <label id="auth-label">請輸入全站後台管理密碼：</label>
-            <input type="password" id="auth-password" class="form-control" placeholder="請輸入密碼">
+            <label id="auth-label">請輸入系統後台密碼：</label>
+            <input type="password" id="auth-password" class="form-control" placeholder="總召密碼或裁判密碼">
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="document.getElementById('auth-modal').classList.add('hidden')">取消</button>
-            <button type="submit" class="btn btn-primary">解鎖後台</button>
+            <button type="submit" class="btn btn-primary">解鎖</button>
           </div>
         </form>
       </div>
@@ -692,6 +655,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=11"></script>
+  <script type="module" src="app.js?v=13"></script>
 </body>
 </html>
