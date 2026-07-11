@@ -264,7 +264,22 @@ export function renderPlayerUpcoming(state) {
   const tbody = document.getElementById('player-upcoming-matches');
   tbody.innerHTML = '';
   
-  const upcoming = state.matches.filter(m => m.status === 'scheduled');
+  const filterSelect = document.getElementById('player-queue-filter');
+  const currentFilter = filterSelect ? filterSelect.value : 'all';
+
+  // Update filter dropdown options if needed (keep current selection)
+  if (filterSelect) {
+    const optionsHtml = ['<option value="all">全部賽事項目</option>']
+      .concat(state.events.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
+    filterSelect.innerHTML = optionsHtml.join('');
+  }
+
+  let upcoming = state.matches.filter(m => m.status === 'scheduled');
+  
+  // Apply filter
+  if (currentFilter !== 'all') {
+    upcoming = upcoming.filter(m => m.event === currentFilter);
+  }
   
   document.getElementById('upcoming-matches-count').innerText = `${upcoming.length} 場待安排`;
 
@@ -553,7 +568,22 @@ export function renderStaffDashboard(state) {
   const queueTbody = document.getElementById('staff-match-queue-tbody');
   queueTbody.innerHTML = '';
 
-  const pendingMatches = state.matches.filter(m => m.status === 'scheduled');
+  const filterSelect = document.getElementById('staff-queue-filter');
+  const currentFilter = filterSelect ? filterSelect.value : 'all';
+
+  // Update filter dropdown options if needed (keep current selection)
+  if (filterSelect) {
+    const optionsHtml = ['<option value="all">全部賽事項目</option>']
+      .concat(state.events.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
+    filterSelect.innerHTML = optionsHtml.join('');
+  }
+
+  let pendingMatches = state.matches.filter(m => m.status === 'scheduled');
+  
+  // Apply filter
+  if (currentFilter !== 'all') {
+    pendingMatches = pendingMatches.filter(m => m.event === currentFilter);
+  }
   
   if (pendingMatches.length === 0) {
     queueTbody.innerHTML = `<tr><td colspan="4" class="text-center text-secondary">尚無待排賽程（或全部賽事已排定完畢）。</td></tr>`;

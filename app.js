@@ -572,10 +572,19 @@ function setupEventListeners() {
         const shouldShuffle = document.getElementById('setup-random-shuffle').checked;
         generateBracket(state, eventName, shouldShuffle);
       });
-      
       saveAndRender();
       alert("已依照目前選手名單重新產生所有的淘汰賽樹狀圖籤表！");
     }
+  });
+
+  // Schedule Queue Filter Change Handler (Staff)
+  document.getElementById('staff-queue-filter').addEventListener('change', () => {
+    renderAll();
+  });
+
+  // Upcoming Queue Filter Change Handler (Player)
+  document.getElementById('player-queue-filter').addEventListener('change', () => {
+    renderAll();
   });
 
   // Edit / Delete Player lists in Setup View

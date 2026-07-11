@@ -82,9 +82,14 @@
       <!-- Upcoming Schedule / Queue -->
       <div class="layout-grid-2">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header flex-between">
             <h4>📅 預計即將進行賽程 (Upcoming Queue)</h4>
-            <span class="badge badge-info" id="upcoming-matches-count">0 場待安排</span>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <select id="player-queue-filter" class="form-control" style="width: auto; max-width: 200px;">
+                <option value="all">全部賽事項目</option>
+              </select>
+              <span class="badge badge-info" id="upcoming-matches-count">0 場待安排</span>
+            </div>
           </div>
           <div class="table-container">
             <table class="data-table">
@@ -209,8 +214,11 @@
 
           <!-- Pending Schedule & Assignment -->
           <div class="card">
-            <div class="card-header">
+            <div class="card-header flex-between">
               <h4>🕒 待排賽程與手動指派 (Schedule Queue)</h4>
+              <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
+                <option value="all">全部賽事項目</option>
+              </select>
             </div>
             <div class="table-container">
               <table class="data-table">
