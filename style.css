@@ -454,7 +454,8 @@ textarea.form-control {
   font-weight: 500;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
 }
 
 .data-table td {
@@ -462,7 +463,8 @@ textarea.form-control {
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
 }
 
 .data-table tbody tr:hover {
@@ -552,6 +554,33 @@ textarea.form-control {
   animation: slideUp 0.3s ease-out;
   text-align: left;
   box-shadow: 0 0 15px rgba(196, 240, 19, 0.1);
+}
+
+/* Court Map 5x5 Grid */
+.court-map-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+@media (max-width: 600px) {
+  .court-map-grid {
+    gap: 4px;
+    padding: 0.5rem;
+  }
+  .court-map-grid > div {
+    min-height: 50px !important;
+    padding: 0.2rem !important;
+  }
+  .court-map-grid strong {
+    font-size: 0.75rem !important;
+  }
+  .court-map-grid span {
+    font-size: 0.8rem !important;
+  }
 }
 
 /* Court Cards Grid */

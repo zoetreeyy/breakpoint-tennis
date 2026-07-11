@@ -294,8 +294,8 @@ export function renderPlayerUpcoming(state) {
     return;
   }
 
-  // Render first 8 upcoming matches to keep it clean
-  upcoming.slice(0, 8).forEach((match, idx) => {
+  // Render all upcoming matches (user can scroll vertically)
+  upcoming.forEach((match, idx) => {
     const p1 = state.players.find(p => p.id === match.player1Id);
     const p2 = state.players.find(p => p.id === match.player2Id);
     
@@ -324,7 +324,7 @@ export function renderPlayerUpcoming(state) {
       <td><span class="badge badge-info">${match.round}</span></td>
       <td><strong>${p1NameText}</strong> <span class="text-secondary small">vs</span> <strong>${p2NameText}</strong></td>
       <td>
-        <span class="small text-secondary">${p1NameText}: ${p1Status} | ${p2NameText}: ${p2Status}</span>
+        <span class="small text-secondary">${p1NameText}: ${p1Status}<br>${p2NameText}: ${p2Status}</span>
         ${conflictText ? '<br>' + conflictText : ''}
       </td>
       <td><span class="text-secondary small">預計賽事釋出後排定</span></td>
