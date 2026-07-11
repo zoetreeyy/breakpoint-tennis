@@ -339,60 +339,14 @@
         </div>
       </div>
 
-      <!-- Custom Match Scheduler Creator Card -->
-      <div class="card mt-4">
-        <div class="card-header">
-          <h4>📅 自訂賽程手動新增與批次匯入 (Custom Match Scheduler)</h4>
-        </div>
-        <div class="card-body">
-          <div class="layout-grid-2" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
-            <!-- Left: Manual Match Add Form -->
-            <div>
-              <h5>➕ 手動新增單場賽事 (Manual Match Creator)</h5>
-              <form id="setup-match-manual-form" class="mt-2">
-                <div class="form-group">
-                  <label for="setup-match-event">選擇賽事項目</label>
-                  <select id="setup-match-event" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                  <label for="setup-match-round">輪次名稱</label>
-                  <input type="text" id="setup-match-round" class="form-control" placeholder="例如：第 1 輪、八強賽、決賽" required>
-                </div>
-                <div class="form-group">
-                  <label for="setup-match-p1">選手 A (Player 1)</label>
-                  <select id="setup-match-p1" class="form-control" required></select>
-                </div>
-                <div class="form-group">
-                  <label for="setup-match-p2">選手 B (Player 2)</label>
-                  <select id="setup-match-p2" class="form-control" required></select>
-                </div>
-                <button type="submit" class="btn btn-primary mt-2 w-full">➕ 新增至待排賽程</button>
-              </form>
-            </div>
-
-            <!-- Right: CSV Batch Import -->
-            <div>
-              <h5>📥 批次匯入對戰賽程 (Batch Match Import)</h5>
-              <div class="form-group mt-2">
-                <textarea id="setup-match-import" class="form-control" rows="7" placeholder="格式：賽事項目,輪次,選手1姓名,選手2姓名&#10;例如：&#10;男子單打 (Men's Singles),第 1 輪,盧彥勳,曾俊欣&#10;男子單打 (Men's Singles),第 1 輪,許育修,莊吉生"></textarea>
-              </div>
-              <button id="btn-import-matches" class="btn btn-secondary w-full">📥 匯入自訂對戰賽程</button>
-              
-              <div class="mt-4 border-top pt-4">
-                <h5>🔄 重新排籤 (Regenerate Brackets)</h5>
-                <button id="btn-regenerate-brackets" class="btn btn-danger w-full mt-2">🔄 依照目前名單重新生成籤表</button>
-                <small class="form-text text-secondary mt-1">提示：若您在左側新增或修改了選手，可以點擊此按鈕重新生成所有項目的淘汰賽樹狀圖。</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Current Players Table -->
       <div class="card mt-4">
         <div class="card-header flex-between">
           <h4>📋 目前選手資料庫 (全體選手：<span id="setup-players-count">0</span> 名)</h4>
-          <button id="btn-add-player-manual" class="btn btn-sm btn-primary">+ 新增單一選手</button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btn-regenerate-brackets" class="btn btn-sm btn-danger">🔄 重新生成籤表</button>
+            <button id="btn-add-player-manual" class="btn btn-sm btn-primary">+ 新增單一選手</button>
+          </div>
         </div>
         <div class="table-container">
           <table class="data-table">
