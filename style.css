@@ -454,6 +454,7 @@ textarea.form-control {
   font-weight: 500;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
 }
 
 .data-table td {
@@ -461,6 +462,7 @@ textarea.form-control {
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .data-table tbody tr:hover {

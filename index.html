@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -76,8 +76,10 @@
           <h4>🗺️ 大會場地配置示意圖 (Court Map)</h4>
         </div>
         <div class="card-body p-0">
-          <div id="player-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 1.5rem; background: var(--bg-secondary);">
-            <!-- Rendered dynamically -->
+          <div class="table-container">
+            <div id="player-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 1.5rem; background: var(--bg-secondary); min-width: 600px;">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
       </div>
@@ -407,8 +409,10 @@
         </div>
         <div class="card-body">
           <p class="text-secondary small">以 5x5 的網格規劃場地。點選每一格的選單，即可配置「大會」或「各個球場」的相對位置。配置完成後請點擊儲存，此圖將顯示於選手看板中。</p>
-          <div id="setup-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-top: 1rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
-            <!-- Rendered dynamically -->
+          <div class="table-container">
+            <div id="setup-court-map-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-top: 1rem; background: var(--bg-secondary); padding: 1rem; border-radius: 8px; min-width: 600px;">
+              <!-- Rendered dynamically -->
+            </div>
           </div>
         </div>
       </div>
@@ -653,6 +657,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=16"></script>
+  <script type="module" src="app.js?v=17"></script>
 </body>
 </html>
