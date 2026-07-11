@@ -264,17 +264,18 @@ export function renderPlayerUpcoming(state) {
   const tbody = document.getElementById('player-upcoming-matches');
   tbody.innerHTML = '';
   
+  let upcoming = state.matches.filter(m => m.status === 'scheduled');
+
   const filterSelect = document.getElementById('player-queue-filter');
   const currentFilter = filterSelect ? filterSelect.value : 'all';
 
-  // Update filter dropdown options if needed (keep current selection)
+  // Update filter dropdown options dynamically from upcoming matches
   if (filterSelect) {
+    const uniqueEvents = [...new Set(state.matches.filter(m => m.status === 'scheduled').map(m => m.event))];
     const optionsHtml = ['<option value="all">全部賽事項目</option>']
-      .concat(state.events.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
+      .concat(uniqueEvents.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
     filterSelect.innerHTML = optionsHtml.join('');
   }
-
-  let upcoming = state.matches.filter(m => m.status === 'scheduled');
   
   // Apply filter
   if (currentFilter !== 'all') {
@@ -568,17 +569,18 @@ export function renderStaffDashboard(state) {
   const queueTbody = document.getElementById('staff-match-queue-tbody');
   queueTbody.innerHTML = '';
 
+  let pendingMatches = state.matches.filter(m => m.status === 'scheduled');
+
   const filterSelect = document.getElementById('staff-queue-filter');
   const currentFilter = filterSelect ? filterSelect.value : 'all';
 
-  // Update filter dropdown options if needed (keep current selection)
+  // Update filter dropdown options dynamically from pending matches
   if (filterSelect) {
+    const uniqueEvents = [...new Set(state.matches.filter(m => m.status === 'scheduled').map(m => m.event))];
     const optionsHtml = ['<option value="all">全部賽事項目</option>']
-      .concat(state.events.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
+      .concat(uniqueEvents.map(ev => `<option value="${ev}" ${ev === currentFilter ? 'selected' : ''}>${ev}</option>`));
     filterSelect.innerHTML = optionsHtml.join('');
   }
-
-  let pendingMatches = state.matches.filter(m => m.status === 'scheduled');
   
   // Apply filter
   if (currentFilter !== 'all') {
