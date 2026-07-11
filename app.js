@@ -180,25 +180,6 @@ function setupEventListeners() {
   navBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       const viewId = btn.getAttribute('data-view');
-      
-      // Separated password protection
-      if (viewId === 'referee-panel') {
-        if (sessionStorage.getItem('referee_auth') !== 'true') {
-          document.getElementById('auth-target-view').value = viewId;
-          document.getElementById('auth-password').value = '';
-          document.getElementById('auth-label').innerText = '裁判控制台執法認證密碼：';
-          document.getElementById('auth-modal').classList.remove('hidden');
-          return; // Intercept view switch
-        }
-      } else if (viewId === 'staff-dashboard' || viewId === 'staff-setup') {
-        if (sessionStorage.getItem('staff_auth') !== 'true') {
-          document.getElementById('auth-target-view').value = viewId;
-          document.getElementById('auth-password').value = '';
-          document.getElementById('auth-label').innerText = '工作人員管理認證密碼：';
-          document.getElementById('auth-modal').classList.remove('hidden');
-          return; // Intercept view switch
-        }
-      }
 
       navBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -218,6 +199,70 @@ function setupEventListeners() {
     });
   });
   
+  // Check admin authorization on load
+  const checkAdminAuth = () => {
+    if (localStorage.getItem('admin_auth') === 'true') {
+      document.querySelectorAll('.admin-only').forEach(btn => {
+        btn.style.display = 'flex'; // Nav buttons use flex in this template
+      });
+    }
+  };
+  checkAdminAuth();
+
+  // Secret Portal Logic (5 clicks on logo)
+  const logo = document.querySelector('.logo');
+  let logoClickCount = 0;
+  let logoClickTimer = null;
+  
+  if (logo) {
+    logo.addEventListener('click', () => {
+      logoClickCount++;
+      clearTimeout(logoClickTimer);
+      
+      if (logoClickCount >= 5) {
+        logoClickCount = 0;
+        if (localStorage.getItem('admin_auth') !== 'true') {
+          document.getElementById('auth-password').value = '';
+          document.getElementById('auth-modal').classList.remove('hidden');
+        } else {
+          // Toggle off admin mode for convenience
+          if (confirm("您目前已處於「全站管理員模式」。是否要登出並隱藏後台按鈕？")) {
+            localStorage.removeItem('admin_auth');
+            document.querySelectorAll('.admin-only').forEach(btn => {
+              btn.style.display = 'none';
+            });
+            // Switch back to player view if they are on an admin tab
+            if (activeView !== 'player-view') {
+              document.querySelector('.nav-btn[data-view="player-view"]').click();
+            }
+          }
+        }
+      }
+      
+      logoClickTimer = setTimeout(() => {
+        logoClickCount = 0;
+      }, 2000); // 2 seconds window
+    });
+  }
+
+  // Global Auth Modal Submit
+  const authForm = document.getElementById('auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pwd = document.getElementById('auth-password').value;
+      if (pwd === 'admin123') {
+        localStorage.setItem('admin_auth', 'true');
+        document.getElementById('auth-modal').classList.add('hidden');
+        checkAdminAuth();
+        alert("✅ 管理員驗證成功！已為您開啟系統後台選單。");
+      } else {
+        alert("密碼錯誤，請重新輸入。");
+        document.getElementById('auth-password').value = '';
+      }
+    });
+  }
+
   // Mobile Menu Toggle logic
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   if (mobileMenuBtn) {
@@ -226,38 +271,6 @@ function setupEventListeners() {
     });
   }
 
-  // Password Verification form submit
-  document.getElementById('auth-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const password = document.getElementById('auth-password').value;
-    const targetView = document.getElementById('auth-target-view').value;
-
-    let authenticated = false;
-
-    if (targetView === 'referee-panel') {
-      if (password === 'ref123') {
-        sessionStorage.setItem('referee_auth', 'true');
-        authenticated = true;
-      }
-    } else if (targetView === 'staff-dashboard' || targetView === 'staff-setup') {
-      if (password === 'staff123') {
-        sessionStorage.setItem('staff_auth', 'true');
-        authenticated = true;
-      }
-    }
-
-    if (authenticated) {
-      document.getElementById('auth-modal').classList.add('hidden');
-      // Perform the deferred view switch
-      const targetBtn = document.querySelector(`.nav-btn[data-view="${targetView}"]`);
-      if (targetBtn) {
-        targetBtn.click();
-      }
-    } else {
-      alert("安全認證密碼錯誤，拒絕存取該管理介面！");
-      document.getElementById('auth-password').value = '';
-    }
-  });
 
   // 2. Audio Initialization Banner
   document.getElementById('btn-init-audio').addEventListener('click', () => {

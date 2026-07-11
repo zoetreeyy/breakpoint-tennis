@@ -31,13 +31,13 @@
       <button class="nav-btn active" data-view="player-view">
         <span class="icon">👥</span> 選手看板 (Player Hub)
       </button>
-      <button class="nav-btn" data-view="staff-dashboard">
+      <button class="nav-btn admin-only" data-view="staff-dashboard" style="display: none;">
         <span class="icon">💼</span> 工作人員端 (Staff Ops)
       </button>
-      <button class="nav-btn" data-view="referee-panel">
+      <button class="nav-btn admin-only" data-view="referee-panel" style="display: none;">
         <span class="icon">⚖️</span> 裁判控制台 (Umpire Console)
       </button>
-      <button class="nav-btn" data-view="staff-setup">
+      <button class="nav-btn admin-only" data-view="staff-setup" style="display: none;">
         <span class="icon">⚙️</span> 事前設定 (Setup)
       </button>
     </nav>
@@ -594,7 +594,12 @@
             <input type="text" id="cert-title" class="form-control" value="2026 Breakpoint 夏季網球公開賽">
           </div>
           <div class="form-group">
-            <label for="cert-winner-label">名次文字</label>
+            <label for="cert-rank">名次文字</label>
+            <input type="text" id="cert-rank" class="form-control" value="冠軍 (Winner)">
+          </div>
+          <div class="form-group">
+            <label for="cert-style">獎狀風格</label>
+            <select id="cert-style" class="form-control">
               <option value="modern">現代活力綠 (Modern Tennis Green)</option>
               <option value="minimal">簡約象牙白 (Minimalist Clean)</option>
             </select>
@@ -664,7 +669,29 @@
     </div>
   </div>
 
+  <!-- Modal 4: Global Admin Authentication -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔒 系統後台解鎖</h3>
+        <button class="modal-close" onclick="document.getElementById('auth-modal').classList.add('hidden')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="auth-form">
+          <div class="form-group">
+            <label id="auth-label">請輸入全站後台管理密碼：</label>
+            <input type="password" id="auth-password" class="form-control" placeholder="請輸入密碼">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('auth-modal').classList.add('hidden')">取消</button>
+            <button type="submit" class="btn btn-primary">解鎖後台</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=9"></script>
+  <script type="module" src="app.js?v=11"></script>
 </body>
 </html>
