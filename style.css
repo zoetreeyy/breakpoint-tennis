@@ -471,6 +471,16 @@ textarea.form-control {
   background-color: rgba(255, 255, 255, 0.01);
 }
 
+@media (max-width: 600px) {
+  .data-table th, .data-table td {
+    padding: 0.4rem 0.2rem !important;
+    font-size: 0.8rem !important;
+  }
+  .data-table th {
+    font-size: 0.75rem !important;
+  }
+}
+
 /* Badges */
 .badge {
   display: inline-block;
