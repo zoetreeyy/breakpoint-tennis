@@ -94,6 +94,20 @@
       <!-- Upcoming Schedule / Queue -->
       <div class="layout-grid-2">
         <div class="card">
+          <div class="card-header">
+            <h4>🏆 賽事簽表與即時戰績 (Brackets)</h4>
+            <div class="select-wrapper">
+              <select id="player-bracket-event-select" class="form-control">
+                <!-- Event options filled dynamically -->
+              </select>
+            </div>
+          </div>
+          <div class="bracket-viewer-container" id="player-bracket-viewer">
+            <!-- Brackets drawn dynamically by UI.js -->
+          </div>
+        </div>
+
+        <div class="card">
           <div class="card-header flex-between">
             <h4>📅 預計即將進行賽程 (Upcoming Queue)</h4>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -103,7 +117,7 @@
               <span class="badge badge-info" id="upcoming-matches-count">0 場待安排</span>
             </div>
           </div>
-          <div class="table-container" style="max-height: 500px; overflow-y: auto; overflow-x: hidden;">
+          <div class="table-container" style="height: 680px; overflow-y: auto; overflow-x: hidden;">
             <table class="data-table" style="word-break: break-word;">
               <thead>
                 <tr>
@@ -118,20 +132,6 @@
                 <!-- Rendered dynamically -->
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h4>🏆 賽事簽表與即時戰績 (Brackets)</h4>
-            <div class="select-wrapper">
-              <select id="player-bracket-event-select" class="form-control">
-                <!-- Event options filled dynamically -->
-              </select>
-            </div>
-          </div>
-          <div class="bracket-viewer-container" id="player-bracket-viewer">
-            <!-- Brackets drawn dynamically by UI.js -->
           </div>
         </div>
       </div>
@@ -233,7 +233,12 @@
           <div style="display: flex; gap: 1rem; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
                <label for="quick-rest-buffer" class="small text-secondary m-0" style="white-space: nowrap;">保護休息時間:</label>
-               <input type="number" id="quick-rest-buffer" class="form-control" style="width: 60px; padding: 2px 4px; height: 24px; font-size: 0.85rem; text-align: center;" min="0">
+               <input type="number" id="quick-rest-buffer" class="form-control" style="width: 50px; padding: 2px 4px; height: 24px; font-size: 0.85rem; text-align: center;" min="0">
+               <span class="small text-secondary">分</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-card); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
+               <label for="quick-avg-match" class="small text-secondary m-0" style="white-space: nowrap;">預估單場時間:</label>
+               <input type="number" id="quick-avg-match" class="form-control" style="width: 50px; padding: 2px 4px; height: 24px; font-size: 0.85rem; text-align: center;" min="1" value="30">
                <span class="small text-secondary">分</span>
             </div>
             <select id="staff-queue-filter" class="form-control" style="width: auto; max-width: 250px;">
@@ -270,6 +275,7 @@
                 <th>賽事項目</th>
                 <th>冠軍 (Winner)</th>
                 <th>亞軍 (Runner-up)</th>
+                <th>季軍 (3rd Place)</th>
                 <th>列印獎狀</th>
               </tr>
             </thead>
@@ -653,6 +659,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=19"></script>
+  <script type="module" src="app.js?v=23"></script>
 </body>
 </html>

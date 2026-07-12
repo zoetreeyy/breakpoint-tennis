@@ -294,6 +294,11 @@ export function renderPlayerUpcoming(state) {
     return;
   }
 
+  // Calculate Estimated Time variables
+  const totalCourts = state.courts.length;
+  const idleCourts = state.courts.filter(c => c.status === 'idle' || !c.currentMatchId).length;
+  const avgMatchDurationMs = (state.configs.avgMatchMinutes || 30) * 60 * 1000;
+
   // Render all upcoming matches (user can scroll vertically)
   upcoming.forEach((match, idx) => {
     const p1 = state.players.find(p => p.id === match.player1Id);
@@ -318,16 +323,39 @@ export function renderPlayerUpcoming(state) {
     const p1NameText = p1 ? p1.name : (match.player1Id === 'BYE' ? 'BYE' : '等候對手');
     const p2NameText = p2 ? p2.name : (match.player2Id === 'BYE' ? 'BYE' : '等候對手');
 
+    // Shorten text for mobile display
+    const shortEvent = match.event.replace(/\s*\(.*?\)/, '');
+    let shortRound = match.round
+      .replace(/第\s*(\d+)\s*輪.*/, 'R$1')
+      .replace(/半準決賽.*/, '8強')
+      .replace(/準決賽.*/, '4強')
+      .replace(/決賽.*/, '決賽');
+
+    // Estimated time calculation
+    let timeText = '';
+    if (totalCourts === 0) {
+      timeText = '釋出後排定';
+    } else if (idx < idleCourts) {
+      timeText = '即將上場';
+    } else {
+      const waitRounds = Math.ceil((idx - idleCourts + 1) / totalCourts);
+      const waitTimeMs = waitRounds * avgMatchDurationMs;
+      const estimatedDate = new Date(Date.now() + waitTimeMs);
+      const hours = String(estimatedDate.getHours()).padStart(2, '0');
+      const mins = String(estimatedDate.getMinutes()).padStart(2, '0');
+      timeText = `約 ${hours}:${mins}`;
+    }
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${match.event}</td>
-      <td><span class="badge badge-info">${match.round}</span></td>
+      <td style="white-space: nowrap;">${shortEvent}</td>
+      <td style="white-space: nowrap;"><span class="badge badge-info">${shortRound}</span></td>
       <td><strong>${p1NameText}</strong> <span class="text-secondary small">vs</span> <strong>${p2NameText}</strong></td>
       <td>
         <span class="small text-secondary">${p1NameText}: ${p1Status}<br>${p2NameText}: ${p2Status}</span>
         ${conflictText ? '<br>' + conflictText : ''}
       </td>
-      <td><span class="text-secondary small">預計賽事釋出後排定</span></td>
+      <td style="white-space: nowrap; font-size: 0.8rem;"><span class="text-secondary">${timeText}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -485,10 +513,14 @@ export function renderPlayerBrackets(state) {
 
 // Render Staff Dashboard (Stats, Check-in, Queue, Court Deployment)
 export function renderStaffDashboard(state) {
-  // Sync quick rest buffer input
+  // Sync quick rest buffer & avg match input
   const quickRestInput = document.getElementById('quick-rest-buffer');
   if (quickRestInput) {
     quickRestInput.value = state.configs.restBufferMinutes || 30;
+  }
+  const quickAvgMatchInput = document.getElementById('quick-avg-match');
+  if (quickAvgMatchInput) {
+    quickAvgMatchInput.value = state.configs.avgMatchMinutes || 30;
   }
   const thConflict = document.getElementById('th-conflict-check');
   if (thConflict) {
@@ -699,12 +731,26 @@ export function renderStaffDashboard(state) {
   winnersTbody.innerHTML = '';
 
   state.events.forEach(eventName => {
-    // Find final match
     const finalMatch = state.matches.find(m => m.event === eventName && m.round === '決賽 (Final)');
+    const semiMatches = state.matches.filter(m => m.event === eventName && m.round === '準決賽 (Semifinals)' && m.status === 'completed');
     
     let winnerName = '尚未分出勝負';
     let runnerupName = '尚未分出勝負';
+    let thirdPlaceName = '尚未分出勝負';
     let printBtnHtml = '';
+
+    if (semiMatches.length > 0) {
+      const thirdPlaces = [];
+      semiMatches.forEach(semi => {
+        if (semi.winnerId) {
+          const loserId = semi.winnerId === semi.player1Id ? semi.player2Id : semi.player1Id;
+          thirdPlaces.push(getPlayerNameById(state, loserId));
+        }
+      });
+      if (thirdPlaces.length > 0) {
+        thirdPlaceName = thirdPlaces.join(' / ');
+      }
+    }
 
     if (finalMatch && finalMatch.status === 'completed' && finalMatch.winnerId) {
       winnerName = getPlayerNameById(state, finalMatch.winnerId);
@@ -712,9 +758,11 @@ export function renderStaffDashboard(state) {
       runnerupName = getPlayerNameById(state, runnerupId);
 
       printBtnHtml = `
-        <button class="btn btn-sm btn-accent" data-action="open-certificate" data-winner="${winnerName}" data-runnerup="${runnerupName}" data-event="${eventName}">
-          🏆 製作證書
-        </button>
+        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+          <button class="btn btn-sm btn-accent" data-action="open-certificate" data-name="${winnerName}" data-rank="冠軍 (Winner)" data-event="${eventName}">🏆 冠軍</button>
+          <button class="btn btn-sm btn-secondary" data-action="open-certificate" data-name="${runnerupName}" data-rank="亞軍 (Runner-up)" data-event="${eventName}">🥈 亞軍</button>
+          ${thirdPlaceName && thirdPlaceName !== '尚未分出勝負' ? `<button class="btn btn-sm btn-secondary" data-action="open-certificate" data-name="${thirdPlaceName}" data-rank="季軍 (3rd Place)" data-event="${eventName}">🥉 季軍</button>` : ''}
+        </div>
       `;
     }
 
@@ -723,6 +771,7 @@ export function renderStaffDashboard(state) {
       <td><strong>${eventName}</strong></td>
       <td class="text-accent font-bold">${winnerName}</td>
       <td class="text-secondary">${runnerupName}</td>
+      <td class="text-secondary">${thirdPlaceName}</td>
       <td>${printBtnHtml || '<span class="text-muted small">決賽完成後開放</span>'}</td>
     `;
     winnersTbody.appendChild(tr);
@@ -936,7 +985,7 @@ function formatScore(score) {
 }
 
 // HTML5 Canvas Certificate Renderer
-export function drawCertificate(winnerName, runnerupName, eventName, title, style) {
+export function drawCertificate(playerName, eventName, title, style, rankStr) {
   const canvas = document.getElementById('cert-canvas');
   const ctx = canvas.getContext('2d');
   
@@ -994,7 +1043,7 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
     // Winner Name
     ctx.font = 'bold 36px Noto Sans TC, sans-serif';
     ctx.fillStyle = '#d4af37';
-    ctx.fillText(winnerName, width / 2, 315);
+    ctx.fillText(playerName, width / 2, 315);
 
     ctx.fillStyle = '#444';
     ctx.font = '18px Noto Sans TC, sans-serif';
@@ -1002,7 +1051,7 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
     
     ctx.font = 'bold 24px Noto Sans TC, sans-serif';
     ctx.fillStyle = '#b8860b';
-    ctx.fillText(`【 ${eventName} 】 冠軍`, width / 2, 410);
+    ctx.fillText(`【 ${eventName} 】 ${rankStr}`, width / 2, 410);
 
     ctx.fillStyle = '#666';
     ctx.font = '14px Noto Sans TC, sans-serif';
@@ -1073,15 +1122,11 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
 
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 36px Noto Sans TC, sans-serif';
-    ctx.fillText(winnerName, width / 2, 335);
+    ctx.fillText(playerName, width / 2, 335);
 
     ctx.fillStyle = '#c4f013';
     ctx.font = 'bold 22px Noto Sans TC, sans-serif';
-    ctx.fillText(`🏆 榮獲【 ${eventName} 】 冠軍`, width / 2, 395);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '14px Noto Sans TC, sans-serif';
-    ctx.fillText(`亞軍：${runnerupName}`, width / 2, 470);
+    ctx.fillText(`🏆 榮獲【 ${eventName} 】 ${rankStr}`, width / 2, 395);
 
     // Time stamp
     ctx.fillStyle = '#64748b';
@@ -1111,7 +1156,7 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
 
     ctx.font = 'bold 38px Noto Sans TC, sans-serif';
     ctx.fillStyle = '#0f172a';
-    ctx.fillText(winnerName, width / 2, 290);
+    ctx.fillText(playerName, width / 2, 290);
 
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 1;
@@ -1122,15 +1167,11 @@ export function drawCertificate(winnerName, runnerupName, eventName, title, styl
 
     ctx.font = '16px Noto Sans TC, sans-serif';
     ctx.fillStyle = '#334155';
-    ctx.fillText(`for securing the First Place (Champion) in`, width / 2, 360);
+    ctx.fillText(`for securing the ${rankStr} in`, width / 2, 360);
 
     ctx.font = 'bold 20px Noto Sans TC, sans-serif';
     ctx.fillStyle = '#0f172a';
     ctx.fillText(`【 ${eventName} 】`, width / 2, 400);
-
-    ctx.font = 'italic 13px Noto Sans TC, sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(`Runner-up: ${runnerupName}`, width / 2, 435);
 
     // Decorative small text
     ctx.font = '10px Outfit, sans-serif';
