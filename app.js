@@ -10,7 +10,7 @@ import {
   loadMockDataIntoState,
   checkPlayerRestConflict,
   checkAndGenerateNextRound
-} from './state.js?v=7';
+} from './state.js?v=10';
 
 import { 
   renderPlayerSearch, 
@@ -26,7 +26,7 @@ import {
   initAudio,
   playNotificationChime,
   speakSummon
-} from './ui.js?v=9';
+} from './ui.js?v=12';
 
 let state = null;
 let activeView = 'player-view';
