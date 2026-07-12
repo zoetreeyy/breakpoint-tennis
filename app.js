@@ -557,12 +557,21 @@ function setupEventListeners() {
 
     if (id) {
       // Edit
-      const p = state.players.find(p => p.id === id);
-      if (p) {
+      const index = state.players.findIndex(p => p.id === id);
+      if (index !== -1) {
+        const p = state.players[index];
+        const addedEvents = selectedEvents.filter(e => !p.events.includes(e));
+        
         p.name = name;
         p.phone = phone;
         p.events = selectedEvents;
         p.gift = gift;
+        
+        // 如果有新增參賽項目，將該選手移至陣列最後面，確保籤表生成時排在最後
+        if (addedEvents.length > 0) {
+          state.players.splice(index, 1);
+          state.players.push(p);
+        }
       }
     } else {
       // Add
