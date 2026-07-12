@@ -26,7 +26,7 @@ import {
   initAudio,
   playNotificationChime,
   speakSummon
-} from './ui.js?v=13';
+} from './ui.js?v=14';
 
 let state = null;
 let activeView = 'player-view';

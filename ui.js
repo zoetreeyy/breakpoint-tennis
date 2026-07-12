@@ -294,10 +294,27 @@ export function renderPlayerUpcoming(state) {
     return;
   }
 
-  // Calculate Estimated Time variables
+  // Calculate Estimated Time variables using queue simulation
   const totalCourts = state.courts.length;
-  const idleCourts = state.courts.filter(c => c.status === 'idle' || !c.currentMatchId).length;
   const avgMatchDurationMs = (state.configs.avgMatchMinutes || 30) * 60 * 1000;
+  
+  let courtAvailabilities = [];
+  if (totalCourts > 0) {
+    state.courts.forEach(court => {
+      if (court.status === 'idle' || !court.currentMatchId) {
+        courtAvailabilities.push(Date.now());
+      } else {
+        const activeMatch = state.matches.find(m => m.id === court.currentMatchId);
+        if (activeMatch && activeMatch.startedAt) {
+          const elapsed = Date.now() - activeMatch.startedAt;
+          const remaining = Math.max(0, avgMatchDurationMs - elapsed);
+          courtAvailabilities.push(Date.now() + remaining);
+        } else {
+          courtAvailabilities.push(Date.now() + avgMatchDurationMs);
+        }
+      }
+    });
+  }
 
   // Render all upcoming matches (user can scroll vertically)
   upcoming.forEach((match, idx) => {
@@ -335,15 +352,20 @@ export function renderPlayerUpcoming(state) {
     let timeText = '';
     if (totalCourts === 0) {
       timeText = '釋出後排定';
-    } else if (idx < idleCourts) {
-      timeText = '即將上場';
     } else {
-      const waitRounds = Math.ceil((idx - idleCourts + 1) / totalCourts);
-      const waitTimeMs = waitRounds * avgMatchDurationMs;
-      const estimatedDate = new Date(Date.now() + waitTimeMs);
-      const hours = String(estimatedDate.getHours()).padStart(2, '0');
-      const mins = String(estimatedDate.getMinutes()).padStart(2, '0');
-      timeText = `約 ${hours}:${mins}<br><span style="font-size: 0.75rem; opacity: 0.7;">(僅供參考)</span>`;
+      courtAvailabilities.sort((a, b) => a - b);
+      const earliestAvailableTime = courtAvailabilities[0];
+      
+      if (earliestAvailableTime <= Date.now() + 60000) {
+        timeText = '即將上場';
+        courtAvailabilities[0] = Date.now() + avgMatchDurationMs;
+      } else {
+        const estimatedDate = new Date(earliestAvailableTime);
+        const hours = String(estimatedDate.getHours()).padStart(2, '0');
+        const mins = String(estimatedDate.getMinutes()).padStart(2, '0');
+        timeText = `約 ${hours}:${mins}<br><span style="font-size: 0.75rem; opacity: 0.7;">(僅供參考)</span>`;
+        courtAvailabilities[0] = earliestAvailableTime + avgMatchDurationMs;
+      }
     }
 
     const tr = document.createElement('tr');
