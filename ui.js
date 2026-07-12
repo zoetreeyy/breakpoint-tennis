@@ -343,7 +343,7 @@ export function renderPlayerUpcoming(state) {
       const estimatedDate = new Date(Date.now() + waitTimeMs);
       const hours = String(estimatedDate.getHours()).padStart(2, '0');
       const mins = String(estimatedDate.getMinutes()).padStart(2, '0');
-      timeText = `約 ${hours}:${mins}`;
+      timeText = `約 ${hours}:${mins}<br><span style="font-size: 0.75rem; opacity: 0.7;">(僅供參考)</span>`;
     }
 
     const tr = document.createElement('tr');
