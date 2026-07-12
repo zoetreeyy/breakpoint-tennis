@@ -335,21 +335,30 @@ export function generateBracket(state, eventName, shouldShuffle = true) {
   const round1Matches = roundMatches.filter(m => m.roundIndex === 1);
   let playerIdx = 0;
 
-  for (let i = 0; i < round1Matches.length; i++) {
+  // Calculate number of BYEs needed
+  const numByes = bracketSize - numPlayers;
+  const numMatches = round1Matches.length;
+  
+  // Distribute BYEs evenly across the matches
+  const byePositions = new Set();
+  if (numByes > 0) {
+    const step = numMatches / numByes;
+    for (let i = 0; i < numByes; i++) {
+      byePositions.add(Math.floor(i * step));
+    }
+  }
+
+  for (let i = 0; i < numMatches; i++) {
     const match = round1Matches[i];
 
-    // Assign Player 1
-    if (playerIdx < players.length) {
+    if (byePositions.has(i)) {
+      // This match gets a BYE
       match.player1Id = players[playerIdx++].id;
-    } else {
-      match.player1Id = 'BYE';
-    }
-
-    // Assign Player 2
-    if (playerIdx < players.length) {
-      match.player2Id = players[playerIdx++].id;
-    } else {
       match.player2Id = 'BYE';
+    } else {
+      // This match gets 2 real players
+      match.player1Id = players[playerIdx++].id;
+      match.player2Id = players[playerIdx++].id;
     }
 
     // Handle BYE immediate advancement

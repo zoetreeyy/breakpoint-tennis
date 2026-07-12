@@ -10,7 +10,7 @@ import {
   loadMockDataIntoState,
   checkPlayerRestConflict,
   checkAndGenerateNextRound
-} from './state.js?v=10';
+} from './state.js?v=11';
 
 import { 
   renderPlayerSearch, 
