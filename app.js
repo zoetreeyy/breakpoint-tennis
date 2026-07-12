@@ -10,7 +10,7 @@ import {
   loadMockDataIntoState,
   checkPlayerRestConflict,
   checkAndGenerateNextRound
-} from './state.js?v=11';
+} from './state.js?v=12';
 
 import { 
   renderPlayerSearch, 
@@ -883,11 +883,30 @@ function setupEventListeners() {
       
       if (!p1 || !p2) return;
       
-      const opt = prompt(`請選擇未到被「判定棄賽」的選手（輸入數字）：\n1. ${p1.name}\n2. ${p2.name}\n（取消請留空或輸入其他）`);
+      const opt = prompt(`請選擇未到被「判定棄賽」的選手（輸入數字）：\n1. ${p1.name}\n2. ${p2.name}\n（如雙方皆未到請輸入 1&2，取消請留空）`);
       
-      if (opt === '1' || opt === '2') {
-        const defaultedPlayerId = opt === '1' ? p1.id : p2.id;
-        const winnerId = opt === '1' ? p2.id : p1.id;
+      if (!opt) return;
+      const cleanOpt = opt.replace(/\s+/g, '');
+
+      if (cleanOpt === '1&2' || cleanOpt === '12' || cleanOpt === '1,2' || cleanOpt === '1+2' || cleanOpt === '1和2') {
+        match.status = 'defaulted';
+        match.winnerId = 'BYE';
+        match.defaultedPlayerId = 'BOTH';
+        match.endedAt = Date.now();
+        
+        if (court) {
+          court.status = 'idle';
+          court.currentMatchId = null;
+        }
+
+        advanceWinner(match, 'BYE', state.matches);
+        checkAndGenerateNextRound(state, match);
+        
+        saveAndRender();
+        alert("已判定雙方皆棄權！此賽程將以 BYE (輪空) 晉級。");
+      } else if (cleanOpt === '1' || cleanOpt === '2') {
+        const defaultedPlayerId = cleanOpt === '1' ? p1.id : p2.id;
+        const winnerId = cleanOpt === '1' ? p2.id : p1.id;
         
         match.status = 'defaulted';
         match.winnerId = winnerId;
@@ -945,18 +964,12 @@ function setupEventListeners() {
     }
   });
 
-  // Score Form Submit Handler
-  document.getElementById('score-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const matchId = document.getElementById('score-form-match-id').value;
-    const match = state.matches.find(m => m.id === matchId);
-    
-    if (!match) return;
-
-    // Get input games count
+  function parseScoreFromForm() {
     const s1p1 = parseInt(document.getElementById('score-s1-p1').value);
     const s1p2 = parseInt(document.getElementById('score-s1-p2').value);
     
+    if (isNaN(s1p1) || isNaN(s1p2)) return null;
+
     const s2p1_val = document.getElementById('score-s2-p1').value;
     const s2p2_val = document.getElementById('score-s2-p2').value;
     const s2p1 = s2p1_val !== '' ? parseInt(s2p1_val) : 0;
@@ -965,17 +978,12 @@ function setupEventListeners() {
     const s3p1_val = document.getElementById('score-s3-p1').value;
     const s3p2_val = document.getElementById('score-s3-p2').value;
     
-    // Parse sets
-    const player1Sets = [];
-    const player2Sets = [];
-    
-    player1Sets.push(s1p1);
-    player2Sets.push(s1p2);
+    const player1Sets = [s1p1];
+    const player2Sets = [s1p2];
     
     let p1SetsWon = s1p1 > s1p2 ? 1 : 0;
     let p2SetsWon = s1p2 > s1p1 ? 1 : 0;
 
-    // Add set 2 if entered
     if (s2p1_val !== '' && s2p2_val !== '') {
       player1Sets.push(s2p1);
       player2Sets.push(s2p2);
@@ -984,22 +992,59 @@ function setupEventListeners() {
     }
 
     let supertieObj = null;
-    // Add supertie / set 3 if entered
     if (s3p1_val !== '' && s3p2_val !== '') {
       const s3p1 = parseInt(s3p1_val);
       const s3p2 = parseInt(s3p2_val);
-      
       supertieObj = { player1: s3p1, player2: s3p2 };
-      
       if (s3p1 > s3p2) p1SetsWon++;
       else if (s3p2 > s3p1) p2SetsWon++;
     }
 
+    return { player1Sets, player2Sets, supertieObj, p1SetsWon, p2SetsWon };
+  }
+
+  // Live Score Update Handler
+  const btnLiveScore = document.getElementById('btn-update-live-score');
+  if (btnLiveScore) {
+    btnLiveScore.addEventListener('click', () => {
+      const matchId = document.getElementById('score-form-match-id').value;
+      const match = state.matches.find(m => m.id === matchId);
+      if (!match) return;
+
+      const parsed = parseScoreFromForm();
+      if (!parsed) {
+        alert("請至少輸入第一盤比分再更新。");
+        return;
+      }
+
+      match.score = {
+        player1: parsed.player1Sets,
+        player2: parsed.player2Sets,
+        supertie: parsed.supertieObj
+      };
+      
+      saveAndRender();
+      document.getElementById('score-modal').classList.add('hidden');
+      alert("目前比分已成功更新到公開看版！");
+    });
+  }
+
+  // Score Form Final Submit Handler
+  document.getElementById('score-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const matchId = document.getElementById('score-form-match-id').value;
+    const match = state.matches.find(m => m.id === matchId);
+    
+    if (!match) return;
+
+    const parsed = parseScoreFromForm();
+    if (!parsed) return;
+
     // Determine overall winner
     let winnerId = null;
-    if (p1SetsWon > p2SetsWon) {
+    if (parsed.p1SetsWon > parsed.p2SetsWon) {
       winnerId = match.player1Id;
-    } else if (p2SetsWon > p1SetsWon) {
+    } else if (parsed.p2SetsWon > parsed.p1SetsWon) {
       winnerId = match.player2Id;
     } else {
       alert("警告：未分出獲勝者（雙方贏得盤數相同）。請確認比分輸入是否正確！");
@@ -1009,9 +1054,9 @@ function setupEventListeners() {
     // Update match
     match.status = 'completed';
     match.score = {
-      player1: player1Sets,
-      player2: player2Sets,
-      supertie: supertieObj
+      player1: parsed.player1Sets,
+      player2: parsed.player2Sets,
+      supertie: parsed.supertieObj
     };
     match.winnerId = winnerId;
     match.endedAt = Date.now();
@@ -1039,6 +1084,8 @@ function setupEventListeners() {
     saveAndRender();
     alert(`登記成功！比分：${formatScore(match.score)}，勝出者：${getPlayerNameById(state, winnerId)}。已自動更新晉級簽表。`);
   });
+
+
 }
 
 // Helper: Get Player Name by ID

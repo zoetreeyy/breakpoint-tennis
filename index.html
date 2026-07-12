@@ -509,9 +509,10 @@
             <small class="form-text text-center mt-2">若是一盤直接獲勝，其他盤可留空</small>
           </div>
 
-          <div class="modal-footer">
+          <div class="modal-footer" style="flex-wrap: wrap; gap: 8px;">
             <button type="button" class="btn btn-outline" onclick="document.getElementById('score-modal').classList.add('hidden')">取消</button>
-            <button type="submit" class="btn btn-accent">送出比賽結果</button>
+            <button type="button" class="btn btn-info" id="btn-update-live-score">更新目前比分</button>
+            <button type="submit" class="btn btn-accent">送出最終比賽結果</button>
           </div>
         </form>
       </div>
@@ -659,6 +660,6 @@
   </div>
 
   <!-- Main Application Script (with cache busting) -->
-  <script type="module" src="app.js?v=29"></script>
+  <script type="module" src="app.js?v=33"></script>
 </body>
 </html>

@@ -382,11 +382,12 @@ function handleByeAdvancement(match, allMatches) {
   if (match.player1Id === 'BYE' && match.player2Id === 'BYE') {
     match.status = 'completed';
     match.winnerId = 'BYE';
-  } else if (match.player2Id === 'BYE') {
+    advanceWinner(match, 'BYE', allMatches);
+  } else if (match.player2Id === 'BYE' && match.player1Id) {
     match.status = 'completed';
     match.winnerId = match.player1Id;
     advanceWinner(match, match.player1Id, allMatches);
-  } else if (match.player1Id === 'BYE') {
+  } else if (match.player1Id === 'BYE' && match.player2Id) {
     match.status = 'completed';
     match.winnerId = match.player2Id;
     advanceWinner(match, match.player2Id, allMatches);
@@ -395,7 +396,7 @@ function handleByeAdvancement(match, allMatches) {
 
 // Move winner to their spot in the next match
 export function advanceWinner(completedMatch, winnerId, allMatches) {
-  if (!completedMatch.nextMatchId || winnerId === 'BYE') return;
+  if (!completedMatch.nextMatchId) return;
 
   const nextMatch = allMatches.find(m => m.id === completedMatch.nextMatchId);
   if (!nextMatch) return;
