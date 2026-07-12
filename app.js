@@ -622,6 +622,15 @@ function setupEventListeners() {
     }
   });
 
+  // Quick Avg Match Time Adjustment
+  document.getElementById('quick-avg-match').addEventListener('change', (e) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val > 0) {
+      state.configs.avgMatchMinutes = val;
+      saveAndRender();
+    }
+  });
+
   // Upcoming Queue Filter Change Handler (Player)
   document.getElementById('player-queue-filter').addEventListener('change', () => {
     renderAll();
@@ -788,8 +797,7 @@ function setupEventListeners() {
   });
 
   // Winners Table - Open Certificate Modal
-  let selectedCertWinner = '';
-  let selectedCertRunnerUp = '';
+  let selectedCertPlayer = '';
   let selectedCertEvent = '';
 
   document.getElementById('staff-winners-tbody').addEventListener('click', (e) => {
@@ -798,9 +806,9 @@ function setupEventListeners() {
     
     const action = btn.getAttribute('data-action');
     if (action === 'open-certificate') {
-      selectedCertWinner = btn.getAttribute('data-winner');
-      selectedCertRunnerUp = btn.getAttribute('data-runnerup');
+      selectedCertPlayer = btn.getAttribute('data-name');
       selectedCertEvent = btn.getAttribute('data-event');
+      document.getElementById('cert-rank').value = btn.getAttribute('data-rank');
       
       // Load modal
       document.getElementById('certificate-modal').classList.remove('hidden');
@@ -815,11 +823,11 @@ function setupEventListeners() {
 
   function triggerCertificateDraw() {
     drawCertificate(
-      selectedCertWinner,
-      selectedCertRunnerUp,
+      selectedCertPlayer,
       selectedCertEvent,
       certTitleInput.value,
-      certStyleSelect.value
+      certStyleSelect.value,
+      certRankInput.value
     );
   }
 
