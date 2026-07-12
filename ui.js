@@ -316,6 +316,37 @@ export function renderPlayerUpcoming(state) {
     });
   }
 
+  const rLimitMs = (state.configs.restBufferMinutes || 30) * 60 * 1000;
+  
+  // 1. Implement Dependency Pre-calculation (prereqs map)
+  const prereqs = {};
+  state.matches.forEach(m => {
+    if (m.nextMatchId) {
+      if (!prereqs[m.nextMatchId]) prereqs[m.nextMatchId] = [];
+      prereqs[m.nextMatchId].push(m.id);
+    }
+  });
+
+  const matchFinishTimes = {}; // Record simulated finish times of scheduled matches
+
+  // 2. Implement getPlayerReadyTime logic to handle isPlaying and lastMatchEndedAt
+  const getPlayerReadyTime = (player) => {
+    if (!player) return Date.now();
+    const activeCourt = state.courts.find(c => {
+       if (c.status !== 'occupied' || !c.currentMatchId) return false;
+       const m = state.matches.find(match => match.id === c.currentMatchId);
+       if (!m) return false;
+       return m.player1Id === player.id || m.player2Id === player.id || m.player1DoubleId === player.id || m.player2DoubleId === player.id;
+    });
+    if (activeCourt) {
+       const m = state.matches.find(match => match.id === activeCourt.currentMatchId);
+       let elapsed = m && m.startedAt ? (Date.now() - m.startedAt) : 0;
+       return Date.now() + Math.max(0, avgMatchDurationMs - elapsed) + rLimitMs;
+    }
+    if (player.lastMatchEndedAt) return player.lastMatchEndedAt + rLimitMs;
+    return Date.now();
+  };
+
   // Render all upcoming matches (user can scroll vertically)
   upcoming.forEach((match, idx) => {
     const p1 = state.players.find(p => p.id === match.player1Id);
@@ -356,16 +387,40 @@ export function renderPlayerUpcoming(state) {
       courtAvailabilities.sort((a, b) => a - b);
       const earliestAvailableTime = courtAvailabilities[0];
       
-      if (earliestAvailableTime <= Date.now() + 60000) {
+      let p1Ready = getPlayerReadyTime(p1);
+      let p2Ready = getPlayerReadyTime(p2);
+      
+      let minPrereqReady = Date.now();
+      if (prereqs[match.id]) {
+        prereqs[match.id].forEach(prqId => {
+          if (matchFinishTimes[prqId]) {
+            minPrereqReady = Math.max(minPrereqReady, matchFinishTimes[prqId] + rLimitMs);
+          } else {
+             const activeCourt = state.courts.find(c => c.currentMatchId === prqId);
+             if (activeCourt) {
+               const m = state.matches.find(x => x.id === prqId);
+               let elapsed = (m && m.startedAt) ? (Date.now() - m.startedAt) : 0;
+               minPrereqReady = Math.max(minPrereqReady, Date.now() + Math.max(0, avgMatchDurationMs - elapsed) + rLimitMs);
+             }
+          }
+        });
+      }
+      
+      const matchStartTime = Math.max(earliestAvailableTime, p1Ready, p2Ready, minPrereqReady);
+      matchFinishTimes[match.id] = matchStartTime + avgMatchDurationMs;
+      
+      if (matchStartTime <= Date.now() + 60000) {
         timeText = '即將上場';
-        courtAvailabilities[0] = Date.now() + avgMatchDurationMs;
       } else {
-        const estimatedDate = new Date(earliestAvailableTime);
+        const estimatedDate = new Date(matchStartTime);
         const hours = String(estimatedDate.getHours()).padStart(2, '0');
         const mins = String(estimatedDate.getMinutes()).padStart(2, '0');
         timeText = `約 ${hours}:${mins}<br><span style="font-size: 0.75rem; opacity: 0.7;">(僅供參考)</span>`;
-        courtAvailabilities[0] = earliestAvailableTime + avgMatchDurationMs;
       }
+      
+      // Crucial: Update the court's available time. Since the match starts at matchStartTime,
+      // it won't be available until matchStartTime + duration!
+      courtAvailabilities[0] = matchStartTime + avgMatchDurationMs;
     }
 
     const tr = document.createElement('tr');
